@@ -1,0 +1,6 @@
+type: module
+name: Facets Form
+description: Place the facets of a given source in a form.
+core_version_requirement: ^8.9 || ^9.2
+dependencies:
+  - facets:facets
