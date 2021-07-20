@@ -1,0 +1,10 @@
+facet.widget.config.facets_form_dropdown:
+  type: facet.widget.default_config
+  label: 'Dropdown (inside form) widget configuration'
+  mapping:
+    default_option_label:
+      type: label
+      label: 'Default option label'
+    child_items_prefix:
+      type: text
+      label: 'Child item prefix'
