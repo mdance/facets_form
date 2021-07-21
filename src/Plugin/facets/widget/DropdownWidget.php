@@ -2,10 +2,10 @@
 
 namespace Drupal\facets_form\Plugin\facets\widget;
 
+use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\facets\FacetInterface;
 use Drupal\facets\Plugin\facets\widget\ArrayWidget;
-use Drupal\facets\Plugin\facets\widget\DropdownWidget as FacetsDropdownWidget;
 use Drupal\facets_form\FacetsFormWidgetInterface;
 use Drupal\facets_form\FacetsFormWidgetTrait;
 
@@ -29,6 +29,7 @@ class DropdownWidget extends ArrayWidget implements FacetsFormWidgetInterface {
     return [
       'default_option_label' => 'Choose',
       'child_prefix' => '-',
+      'disabled_on_empty' => FALSE,
     ] + parent::defaultConfiguration();
   }
 
@@ -44,10 +45,16 @@ class DropdownWidget extends ArrayWidget implements FacetsFormWidgetInterface {
       ],
       'child_items_prefix' => [
         '#type' => 'textfield',
-        '#title' => $this->t('Child prefix'),
+        '#title' => $this->t('Child prefix character'),
         '#description' => $this->t('A prefix to be displayed for each child. Note, that the prefix will be displayed multiple times depending on the nesting level.'),
-        '#default_value' => $this->getConfiguration()['child_prefix'],
-      ]
+        '#default_value' => $this->getConfiguration()['child_items_prefix'],
+        '#maxlength' => 1,
+      ],
+      'disabled_on_empty' => [
+        '#type' => 'checkbox',
+        '#title' => $this->t('Disable when there are no results'),
+        '#default_value' => $this->getConfiguration()['disabled_on_empty'],
+      ],
     ] + parent::buildConfigurationForm($form, $form_state, $facet);
   }
 
@@ -57,37 +64,61 @@ class DropdownWidget extends ArrayWidget implements FacetsFormWidgetInterface {
   public function build(FacetInterface $facet) {
     $items = parent::build($facet)[$facet->getFieldIdentifier()] ?? [];
 
-    $options = $default_value = [];
+    $options = $default_values = [];
     if ($facet->getShowOnlyOneResult()) {
       $options[NULL] = $this->getConfiguration()['default_option_label'];
     }
 
-    $this->buildOptionsAndDefaultValue($options, $default_value, $items);
+    $this->buildOptionsAndDefaultValues($options, $default_values, $items);
 
     return [
       $facet->id() => [
         '#type' => 'select',
         '#options' => $options,
-        '#default_value' => $default_value,
+        '#default_value' => $default_values,
         '#multiple' => !$facet->getShowOnlyOneResult(),
-        '#disabled' => empty($items),
+        '#disabled' => $this->getConfiguration()['disabled_on_empty'] && empty($items),
       ],
     ];
   }
 
-  protected function buildOptionsAndDefaultValue(array &$options, array &$default_value, array $items, int $depth = 0): void {
+  /**
+   * Builds the list of select options and default values.
+   *
+   * @param array $options
+   *   The list of options to be built, passed by reference.
+   * @param array $default_values
+   *   The list of default values to be built, passed by reference.
+   * @param array $items
+   *   The list of items.
+   * @param int $depth
+   *   (optional) The "zero based" depth of the current items. Used internally.
+   */
+  protected function buildOptionsAndDefaultValues(array &$options, array &$default_values, array $items, int $depth = -1): void {
+    $depth++;
+
     foreach ($items as $item) {
-      if (!empty($items['children'])) dpm($items['children']);
       $text = $item['values']['value'];
       if ($this->showNumbers) {
         $text .= " ({$item['values']['count']})";
       }
-      // @todo Handle hierarchy/children.
+
+      // Indent child items if a prefix has been set.
+      if ($depth > 0 && $indent_char = $this->getConfiguration()['child_items_prefix']) {
+        // Standard HTML <option> element is trimming leading spaces.
+        $indent_char = $indent_char !== ' ' ? $indent_char : '&nbsp;';
+        $pattern = str_repeat($indent_char, $depth) . ' @text';
+        $text = new FormattableMarkup($pattern, ['@text' => $text]);
+      }
       $options[$item['raw_value']] = $text;
 
       // Collect default values.
       if (!empty($item['values']['active'])) {
-        $default_value[] = $item['raw_value'];
+        $default_values[] = $item['raw_value'];
+      }
+
+      if (!empty($item['children'])) {
+        $this->buildOptionsAndDefaultValues($options, $default_values, $item['children'][0], $depth);
       }
     }
   }
