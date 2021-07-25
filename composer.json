@@ -1,0 +1,32 @@
+{
+    "name": "drupal/facets_form",
+    "description": "Place the facets of a given facets source in a form",
+    "type": "drupal-module",
+    "license": "GPL-2.0+",
+    "homepage": "https://www.drupal.org/project/facets_form",
+    "support": {
+        "issues": "https://www.drupal.org/project/issues/facets_form",
+        "source": "https://git.drupalcode.org/project/facets_form"
+    },
+    "authors": [
+        {
+            "name": "Claudiu Cristea",
+            "homepage": "https://www.drupal.org/u/claudiucristea"
+        },
+        {
+            "name": "Andras Szilagyi",
+            "homepage": "https://www.drupal.org/u/andras_szilagyi"
+        }
+    ],
+    "require": {
+        "cweagans/composer-patches": "^1.7",
+        "drupal/facets": "^1.8"
+    },
+    "extra": {
+        "patches": {
+            "drupal/facets": {
+                "https://www.drupal.org/project/facets/issues/3223956": "https://git.drupalcode.org/project/facets/-/merge_requests/25.diff"
+            }
+        }
+    }
+}

@@ -5,6 +5,9 @@ namespace Drupal\facets_form;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\facets\FacetInterface;
 
+/**
+ * Reusable code for widget plugins eligible for facets forms.
+ */
 trait FacetsFormWidgetTrait {
 
   /**

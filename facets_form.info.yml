@@ -1,6 +1,7 @@
 type: module
 name: Facets Form
-description: Place the facets of a given source in a form.
+description: Place the facets of a given facets source in a form.
 core_version_requirement: ^8.9 || ^9.2
+package: Search
 dependencies:
   - facets:facets

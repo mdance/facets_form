@@ -6,6 +6,9 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\facets\FacetInterface;
 use Drupal\facets\Widget\WidgetPluginInterface;
 
+/**
+ * Provides an interface for widget plugins eligible for facets forms.
+ */
 interface FacetsFormWidgetInterface extends WidgetPluginInterface {
 
   /**

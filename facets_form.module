@@ -4,10 +4,3 @@
  * @file
  * Hook implementations for Facets Form module.
  */
-
-use Drupal\facets_form\Plugin\facets\widget\DropdownWidget;
-
-function facets_form_widget_plugin_info_alter(array &$definitions): void {
-//  $definitions['dropdown']['class'] = DropdownWidget::class;
-//  print_r($definitions);
-}
