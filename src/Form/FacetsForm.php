@@ -100,9 +100,12 @@ class FacetsForm extends FormBase {
     ];
 
     $form['actions']['reset'] = [
-      '#type' => 'submit',
-      '#value' => $this->t('Clear filters'),
-      '#op' => 'reset',
+      '#type' => 'link',
+      '#title' => $this->t('Clear filters'),
+      '#attributes' => [
+        'class' => ['button'],
+      ],
+      '#url' =>  Url::fromRoute('<current>'),
     ];
 
     $cache->applyTo($form);
@@ -114,13 +117,6 @@ class FacetsForm extends FormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    $current_url = Url::fromRoute('<current>');
-    $triggering_element = $form_state->getTriggeringElement();
-    if ($triggering_element['#op'] === 'reset') {
-      $form_state->setRedirectUrl($current_url);
-      return;
-    }
-
     $active_filters = [];
     foreach ($this->facetsManager->getFacetsByFacetSourceId($form_state->get('source_id')) as $facet) {
       $widget = $facet->getWidgetInstance();
@@ -138,7 +134,7 @@ class FacetsForm extends FormBase {
 
     // If there are no active filters, we redirect to the current URL without
     // any filters in the URL.
-    $form_state->setRedirectUrl($current_url);
+    $form_state->setRedirectUrl(Url::fromRoute('<current>'));
   }
 
   /**
