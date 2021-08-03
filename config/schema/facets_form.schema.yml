@@ -8,3 +8,14 @@ facet.widget.config.facets_form_dropdown:
     child_items_prefix:
       type: text
       label: 'Child item prefix'
+
+block.settings.facets_form:*:
+  type: block_settings
+  label: 'Facets form block'
+  mapping:
+    submit_text:
+      type: string
+      label: 'Search'
+    reset_text:
+      type: string
+      label: 'Clear filters'

@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Drupal\facets_form\Form;
 
 use Drupal\Core\Cache\CacheableMetadata;
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
@@ -34,16 +35,26 @@ class FacetsForm extends FormBase {
   protected $facetsUrlGenerator;
 
   /**
+   * The facets form config.
+   *
+   * @var \Drupal\Core\Config\ImmutableConfig
+   */
+  protected $config;
+
+  /**
    * Constructs an instance of ListFacetsForm.
    *
    * @param \Drupal\facets\FacetManager\DefaultFacetManager $facets_manager
    *   The facets manager.
    * @param \Drupal\facets\Utility\FacetsUrlGenerator $facets_url_generator
    *   The facets url generator.
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   *   The config factory.
    */
-  public function __construct(DefaultFacetManager $facets_manager, FacetsUrlGenerator $facets_url_generator) {
+  public function __construct(DefaultFacetManager $facets_manager, FacetsUrlGenerator $facets_url_generator, ConfigFactoryInterface $config_factory) {
     $this->facetsManager = $facets_manager;
     $this->facetsUrlGenerator = $facets_url_generator;
+    $this->config = $config_factory->get('facets_form.settings');
   }
 
   /**
@@ -52,7 +63,8 @@ class FacetsForm extends FormBase {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('facets.manager'),
-      $container->get('facets.utility.url_generator')
+      $container->get('facets.utility.url_generator'),
+      $container->get('config.factory'),
     );
   }
 
@@ -95,13 +107,13 @@ class FacetsForm extends FormBase {
     $form['actions']['#type'] = 'actions';
     $form['actions']['submit'] = [
       '#type' => 'submit',
-      '#value' => $this->t('Search'),
+      '#value' => $this->config->get('submit_text'),
       '#op' => 'submit',
     ];
 
     $form['actions']['reset'] = [
       '#type' => 'link',
-      '#title' => $this->t('Clear filters'),
+      '#title' => $this->config->get('reset_text'),
       '#attributes' => [
         'class' => ['button'],
       ],
