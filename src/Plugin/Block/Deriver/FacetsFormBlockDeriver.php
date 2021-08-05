@@ -47,7 +47,7 @@ class FacetsFormBlockDeriver extends DeriverBase implements ContainerDeriverInte
       $this->derivatives[$plugin_id] = [
         'admin_label' => $this->t('Facet form: @source', [
           '@source' => $definition['label'],
-        ])
+        ]),
       ] + $base_plugin_definition;
     }
     return $this->derivatives;

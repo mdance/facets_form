@@ -17,6 +17,14 @@ This has some drawbacks:
   Also, it doesn't allow scenarios where the user wants to do multiple filter
   selection before the filters are submitted.
 
+## Dependency
+
+This module depends on [Facets](https://www.drupal.org/project/facets) and
+requires [this patch](https://www.drupal.org/project/facets/issues/3223956). If
+you use Composer, the patch will be automatically downloaded for you, otherwise
+you'll need to apply the patch manually. Please, support the patch adoption in
+https://www.drupal.org/project/facets/issues/3223956.
+
 ## Usage
 
 * _Facets Form_ provides a block containing a form for each facets source.
