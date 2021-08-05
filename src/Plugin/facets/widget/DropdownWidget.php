@@ -23,12 +23,19 @@ class DropdownWidget extends ArrayWidget implements FacetsFormWidgetInterface {
   use FacetsFormWidgetTrait;
 
   /**
+   * Show the amount of results next to the result.
+   *
+   * @var bool
+   */
+  protected $showNumbers;
+
+  /**
    * {@inheritdoc}
    */
   public function defaultConfiguration(): array {
     return [
       'default_option_label' => 'Choose',
-      'child_prefix' => '-',
+      'child_items_prefix' => '-',
       'disabled_on_empty' => FALSE,
     ] + parent::defaultConfiguration();
   }
@@ -98,19 +105,21 @@ class DropdownWidget extends ArrayWidget implements FacetsFormWidgetInterface {
     $depth++;
 
     foreach ($items as $item) {
+      // @todo Allow customizing the label in #3226866.
+      // @see https://www.drupal.org/project/facets_form/issues/3226866
       $text = $item['values']['value'];
-      if ($this->showNumbers) {
+      if ($this->getConfiguration()['show_numbers']) {
         $text .= " ({$item['values']['count']})";
       }
 
       // Indent child items if a prefix has been set.
+      $pattern = '@text';
       if ($depth > 0 && $indent_char = $this->getConfiguration()['child_items_prefix']) {
         // Standard HTML <option> element is trimming leading spaces.
         $indent_char = $indent_char !== ' ' ? $indent_char : '&nbsp;';
-        $pattern = str_repeat($indent_char, $depth) . ' @text';
-        $text = new FormattableMarkup($pattern, ['@text' => $text]);
+        $pattern = str_repeat($indent_char, $depth) . " {$pattern}";
       }
-      $options[$item['raw_value']] = $text;
+      $options[$item['raw_value']] = new FormattableMarkup($pattern, ['@text' => $text]);
 
       // Collect default values.
       if (!empty($item['values']['active'])) {

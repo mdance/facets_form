@@ -3,7 +3,6 @@
 namespace Drupal\facets_form\Plugin\Block;
 
 use Drupal\Core\Block\BlockBase;
-use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\facets_form\Form\FacetsForm;
@@ -30,13 +29,6 @@ class FacetsFormBlock extends BlockBase implements ContainerFactoryPluginInterfa
   protected $formBuilder;
 
   /**
-   * The facets form config.
-   *
-   * @var \Drupal\Core\Config\ImmutableConfig
-   */
-  protected $config;
-
-  /**
    * Constructs a new form instance.
    *
    * @param array $configuration
@@ -47,13 +39,10 @@ class FacetsFormBlock extends BlockBase implements ContainerFactoryPluginInterfa
    *   The plugin implementation definition.
    * @param \Drupal\Core\Form\FormBuilderInterface $form_builder
    *   The form builder service.
-   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
-   *   The config factory.
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, FormBuilderInterface $form_builder,  ConfigFactoryInterface $config_factory) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, FormBuilderInterface $form_builder) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->formBuilder = $form_builder;
-    $this->config = $config_factory->get('facets_form.settings');
   }
 
   /**
@@ -64,54 +53,64 @@ class FacetsFormBlock extends BlockBase implements ContainerFactoryPluginInterfa
       $configuration,
       $plugin_id,
       $plugin_definition,
-      $container->get('form_builder'),
-      $container->get('config.factory'),
+      $container->get('form_builder')
     );
   }
 
   /**
    * {@inheritdoc}
    */
-  public function blockForm($form, FormStateInterface $form_state) {
+  public function defaultConfiguration(): array {
+    return [
+      'button' => [
+        'label' => [
+          'submit' => $this->t('Search'),
+          'reset' => $this->t('Clear filters'),
+        ],
+      ],
+    ] + parent::defaultConfiguration();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function blockForm($form, FormStateInterface $form_state): array {
     $form = parent::blockForm($form, $form_state);
     $config = $this->getConfiguration();
-    $form['submit_text'] = [
+    $form['submit_label'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Submit button'),
       '#description' => $this->t('Add the text which overrides the facet submit label button.'),
-      '#default_value' => $config['submit_text'] ?? $this->config->get('submit_text'),
+      '#default_value' => $config['button']['label']['submit'],
       '#required' => TRUE,
     ];
-    $form['reset_text'] = [
+    $form['reset_label'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Reset button'),
       '#description' => $this->t('Add the text which overrides the facet reset label button.'),
-      '#default_value' => $config['reset_text'] ?? $this->config->get('reset_text'),
+      '#default_value' => $config['button']['label']['reset'],
       '#required' => TRUE,
     ];
     return $form;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function blockSubmit($form, FormStateInterface $form_state): void {
+    $this->setConfigurationValue('button', [
+      'label' => [
+        'submit' => $form_state->getValue('submit_label'),
+        'reset' => $form_state->getValue('reset_label'),
+      ],
+    ]);
   }
 
   /**
    * {@inheritdoc}
    */
   public function build(): array {
-    $config = $this->getConfiguration();
-    $form = $this->formBuilder->getForm(FacetsForm::class, $this->getDerivativeId());
-
-    $form['actions']['submit']['#value'] = $config['submit_text'];
-    $form['actions']['reset']['#title'] = $config['reset_text'];
-
-    return $form;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function blockSubmit($form, FormStateInterface $form_state) {
-    // Setting values for button labels.
-    $this->setConfigurationValue('submit_text', $form_state->getValue('submit_text'));
-    $this->setConfigurationValue('reset_text', $form_state->getValue('reset_text'));
+    return $this->formBuilder->getForm(FacetsForm::class, $this->getDerivativeId(), $this->getConfiguration());
   }
 
 }

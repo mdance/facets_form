@@ -8,14 +8,25 @@ facet.widget.config.facets_form_dropdown:
     child_items_prefix:
       type: text
       label: 'Child item prefix'
+    disabled_on_empty:
+      type: boolean
+      label: 'Disable on empty'
 
-block.settings.facets_form:*:
+block.settings.facets_form:*:*:
   type: block_settings
   label: 'Facets form block'
   mapping:
-    submit_text:
-      type: string
-      label: 'Search'
-    reset_text:
-      type: string
-      label: 'Clear filters'
+    button:
+      type: mapping
+      label: Button
+      mapping:
+        label:
+          type: mapping
+          label: Label
+          mapping:
+            submit:
+              type: string
+              label: Submit
+            reset:
+              type: string
+              label: Reset
