@@ -24,12 +24,10 @@ class IntegrationTest extends BrowserTestBase {
    */
   protected static $modules = [
     'block',
-    'facets',
     'facets_form',
     'facets_search_api_dependency',
     'node',
     'search_api',
-    'views',
   ];
 
   /**
@@ -45,7 +43,7 @@ class IntegrationTest extends BrowserTestBase {
 
     $this->setUpExampleStructure();
     $this->insertExampleContent();
-    $this->assertEquals($this->indexItems('database_search_index'), 5, '5 items were indexed.');
+    $this->assertSame(5, $this->indexItems('database_search_index'));
   }
 
   /**
@@ -53,8 +51,7 @@ class IntegrationTest extends BrowserTestBase {
    */
   public function testFacetsForm(): void {
     $assert = $this->assertSession();
-    $session = $this->getSession();
-    $page = $session->getPage();
+    $page = $this->getSession()->getPage();
     $this->drupalLogin($this->drupalCreateUser(['administer blocks']));
     $this->createFacet('Emu', 'emu');
     $this->createFacet('Llama', 'llama');
@@ -78,14 +75,30 @@ class IntegrationTest extends BrowserTestBase {
     // The form submits and filters the results.
     $page->selectFieldOption('llama[]', 'article');
     $assert->buttonExists('Apply', $form)->press();
-    $this->assertStringContainsString('search-api-test-fulltext?f[0]=llama:article', urldecode($session->getCurrentUrl()));
+    $assert->addressEquals('search-api-test-fulltext?f[0]=llama:article');
     $assert->elementsCount('css', '.views-row', 2);
     $page->selectFieldOption('llama[]', 'item');
     $assert->buttonExists('Apply', $form)->press();
-    $this->assertStringContainsString('search-api-test-fulltext?f[0]=llama:item', urldecode($session->getCurrentUrl()));
+    $assert->addressEquals('search-api-test-fulltext?f[0]=llama:item');
     $assert->elementsCount('css', '.views-row', 3);
     $page->clickLink('Reset');
-    $this->assertStringNotContainsString('f[0]=llama', urldecode($session->getCurrentUrl()));
+    $assert->addressNotEquals('f[0]=llama');
+    $assert->elementsCount('css', '.views-row', 5);
+
+    // Test the CheckboxWidget widget.
+    $facet->setWidget('facets_form_checkbox', ['indent_class' => 'super-indented']);
+    $facet->save();
+    $this->drupalGet('search-api-test-fulltext');
+    $form->checkField('item');
+    $form->pressButton('Apply');
+    $assert->addressEquals('search-api-test-fulltext?f[0]=llama:item');
+    $assert->checkboxChecked('item', $form);
+    $assert->elementsCount('css', '.views-row', 3);
+    $form->checkField('article');
+    $form->pressButton('Apply');
+    $assert->addressEquals('search-api-test-fulltext?f[0]=llama:article&f[1]=llama:item');
+    $assert->checkboxChecked('item', $form);
+    $assert->checkboxChecked('article', $form);
     $assert->elementsCount('css', '.views-row', 5);
   }
 

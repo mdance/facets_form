@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace Drupal\facets_form;
 
 use Drupal\Core\Form\FormStateInterface;

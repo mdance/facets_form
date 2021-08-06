@@ -4,17 +4,17 @@ declare(strict_types = 1);
 
 namespace Drupal\Tests\facets_form\Kernel\Plugin\facets\widget;
 
-use Drupal\Core\Url;
 use Drupal\facets\Entity\Facet;
-use Drupal\facets\FacetInterface;
-use Drupal\facets\Result\Result;
 use Drupal\KernelTests\KernelTestBase;
+use Drupal\Tests\facets_form\Traits\FacetsFormWidgetTestTrait;
 
 /**
  * @coversDefaultClass \Drupal\facets_form\Plugin\facets\widget\DropdownWidget
  * @group facets_form
  */
 class DropdownWidgetTest extends KernelTestBase {
+
+  use FacetsFormWidgetTestTrait;
 
   /**
    * {@inheritdoc}
@@ -35,6 +35,8 @@ class DropdownWidgetTest extends KernelTestBase {
    *   The used to build the results.
    * @param array $active_items
    *   Active items.
+   * @param string $expected_title_display
+   *   Select '#title_display' expectation.
    * @param array $expected_default_values
    *   Select '#default_value' expectation.
    * @param bool $expected_multiple
@@ -53,6 +55,7 @@ class DropdownWidgetTest extends KernelTestBase {
     array $widget_config,
     array $data,
     array $active_items,
+    string $expected_title_display,
     array $expected_default_values,
     bool $expected_multiple,
     bool $expected_disabled,
@@ -64,6 +67,7 @@ class DropdownWidgetTest extends KernelTestBase {
 
     $build = $facet->getWidgetInstance()->build($facet)['foo'];
     $this->assertSame('select', $build['#type']);
+    $this->assertSame($expected_title_display, $build['#title_display']);
     $this->assertEquals($expected_default_values, $build['#default_value']);
     $this->assertSame($expected_multiple, $build['#multiple']);
     $this->assertSame($expected_disabled, $build['#disabled']);
@@ -79,7 +83,9 @@ class DropdownWidgetTest extends KernelTestBase {
   public function providerTestPlugin(): array {
     return [
       'default' => [
-        [],
+        [
+          'show_title' => TRUE,
+        ],
         [],
         [
           '1' => [
@@ -96,6 +102,7 @@ class DropdownWidgetTest extends KernelTestBase {
           ],
         ],
         ['1.1', '2'],
+        'before',
         ['1.1', '2'],
         TRUE,
         FALSE,
@@ -122,6 +129,7 @@ class DropdownWidgetTest extends KernelTestBase {
           '2' => [],
         ],
         ['1'],
+        'invisible',
         ['1'],
         FALSE,
         FALSE,
@@ -144,6 +152,7 @@ class DropdownWidgetTest extends KernelTestBase {
           ],
         ],
         ['1.1.1'],
+        'invisible',
         ['1.1.1'],
         TRUE,
         FALSE,
@@ -166,6 +175,7 @@ class DropdownWidgetTest extends KernelTestBase {
           ],
         ],
         [],
+        'invisible',
         [],
         TRUE,
         FALSE,
@@ -182,6 +192,7 @@ class DropdownWidgetTest extends KernelTestBase {
         ],
         [],
         [],
+        'invisible',
         [],
         TRUE,
         TRUE,
@@ -197,6 +208,7 @@ class DropdownWidgetTest extends KernelTestBase {
           '2' => [],
         ],
         ['1'],
+        'invisible',
         ['1'],
         TRUE,
         FALSE,
@@ -208,6 +220,7 @@ class DropdownWidgetTest extends KernelTestBase {
       'pick_one_with_hash' => [
         [
           'show_only_one_result' => TRUE,
+          'show_title' => TRUE,
         ],
         [
           'default_option_label' => 'Pick one',
@@ -229,6 +242,7 @@ class DropdownWidgetTest extends KernelTestBase {
           ],
         ],
         ['1.1', '2'],
+        'before',
         ['1.1', '2'],
         FALSE,
         FALSE,
@@ -245,37 +259,6 @@ class DropdownWidgetTest extends KernelTestBase {
         ],
       ],
     ];
-  }
-
-  /**
-   * Builds a list of deep nested results.
-   *
-   * @param \Drupal\facets\FacetInterface $facet
-   *   The facet.
-   * @param array $data
-   *   Result data.
-   * @param array $active
-   *   Active items.
-   *
-   * @return \Drupal\facets\Result\ResultInterface[]
-   *   A list of nested results.
-   */
-  protected function getResults(FacetInterface $facet, array $data, array $active = []): array {
-    $results = [];
-    foreach ($data as $value => $children) {
-      $display_value = str_replace(['1', '2', '3'], ['One', 'Two', 'Three'], $value);
-      $count = (int) str_replace('.', '', $value);
-      $result = new Result($facet, $value, $display_value, $count);
-      $result->setUrl(Url::fromUri("http://example.com/{$value}"));
-      if (in_array($value, $active)) {
-        $result->setActiveState(TRUE);
-      }
-      if (!empty($children)) {
-        $result->setChildren($this->getResults($facet, $children, $active));
-      }
-      $results[] = $result;
-    }
-    return $results;
   }
 
 }

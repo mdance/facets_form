@@ -4,3 +4,5 @@
  * @file
  * Hook implementations for Facets Form module.
  */
+
+declare(strict_types = 1);

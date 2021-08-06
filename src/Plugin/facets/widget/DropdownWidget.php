@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace Drupal\facets_form\Plugin\facets\widget;
 
 use Drupal\Component\Render\FormattableMarkup;
@@ -71,18 +73,25 @@ class DropdownWidget extends ArrayWidget implements FacetsFormWidgetInterface {
   public function build(FacetInterface $facet) {
     $items = parent::build($facet)[$facet->getFieldIdentifier()] ?? [];
 
-    $options = $default_values = [];
+    $this->processItems($items);
+
+    $options = [];
     if ($facet->getShowOnlyOneResult()) {
       $options[NULL] = $this->getConfiguration()['default_option_label'];
     }
-
-    $this->buildOptionsAndDefaultValues($options, $default_values, $items);
+    $options += array_map(function (array $item) {
+      return $item['label'];
+    }, $this->processedItems);
 
     return [
       $facet->id() => [
         '#type' => 'select',
+        '#title' => $facet->getName(),
+        '#title_display' => $facet->get('show_title') ? 'before' : 'invisible',
         '#options' => $options,
-        '#default_value' => $default_values,
+        '#default_value' => array_keys(array_filter($this->processedItems, function (array $item): bool {
+          return $item['default'];
+        })),
         '#multiple' => !$facet->getShowOnlyOneResult(),
         '#disabled' => $this->getConfiguration()['disabled_on_empty'] && empty($items),
       ],
@@ -90,46 +99,25 @@ class DropdownWidget extends ArrayWidget implements FacetsFormWidgetInterface {
   }
 
   /**
-   * Builds the list of select options and default values.
-   *
-   * @param array $options
-   *   The list of options to be built, passed by reference.
-   * @param array $default_values
-   *   The list of default values to be built, passed by reference.
-   * @param array $items
-   *   The list of items.
-   * @param int $depth
-   *   (optional) The "zero based" depth of the current items. Used internally.
+   * {@inheritdoc}
    */
-  protected function buildOptionsAndDefaultValues(array &$options, array &$default_values, array $items, int $depth = -1): void {
-    $depth++;
-
-    foreach ($items as $item) {
-      // @todo Allow customizing the label in #3226866.
-      // @see https://www.drupal.org/project/facets_form/issues/3226866
-      $text = $item['values']['value'];
-      if ($this->getConfiguration()['show_numbers']) {
-        $text .= " ({$item['values']['count']})";
-      }
-
-      // Indent child items if a prefix has been set.
-      $pattern = '@text';
-      if ($depth > 0 && $indent_char = $this->getConfiguration()['child_items_prefix']) {
-        // Standard HTML <option> element is trimming leading spaces.
-        $indent_char = $indent_char !== ' ' ? $indent_char : '&nbsp;';
-        $pattern = str_repeat($indent_char, $depth) . " {$pattern}";
-      }
-      $options[$item['raw_value']] = new FormattableMarkup($pattern, ['@text' => $text]);
-
-      // Collect default values.
-      if (!empty($item['values']['active'])) {
-        $default_values[] = $item['raw_value'];
-      }
-
-      if (!empty($item['children'])) {
-        $this->buildOptionsAndDefaultValues($options, $default_values, $item['children'][0], $depth);
-      }
+  protected function getOptionLabel(array $item, int $depth) {
+    // @todo Allow customizing the label in #3226866.
+    // @see https://www.drupal.org/project/facets_form/issues/3226866
+    $text = $item['values']['value'];
+    if ($this->getConfiguration()['show_numbers']) {
+      $text .= " ({$item['values']['count']})";
     }
+
+    // Indent child items if a prefix has been set.
+    $pattern = '@text';
+    if ($depth > 0 && $indent_char = $this->getConfiguration()['child_items_prefix']) {
+      // Standard HTML <option> element is trimming leading spaces.
+      $indent_char = $indent_char !== ' ' ? $indent_char : '&nbsp;';
+      $pattern = str_repeat($indent_char, $depth) . " {$pattern}";
+    }
+
+    return new FormattableMarkup($pattern, ['@text' => $text]);
   }
 
 }
