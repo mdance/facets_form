@@ -80,7 +80,8 @@ class FacetsForm extends FormBase {
 
     foreach ($facets as $facet) {
       $widget = $facet->getWidgetInstance();
-      if ($widget instanceof FacetsFormWidgetInterface) {
+      if ($widget instanceof FacetsFormWidgetInterface &&
+        (empty($config['facets']) || in_array($facet->id(), $config['facets']))) {
         $form['facets'][$facet->id()] = $this->facetsManager->build($facet);
       }
     }

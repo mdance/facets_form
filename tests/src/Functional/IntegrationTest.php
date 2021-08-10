@@ -65,13 +65,18 @@ class IntegrationTest extends BrowserTestBase {
     $assert->fieldValueEquals('Reset button', 'Clear filters');
     $page->fillField('Submit button', 'Apply');
     $page->fillField('Reset button', 'Reset');
+    $assert->fieldExists('Llama');
+    $page->checkField('Llama');
     $page->pressButton('Save block');
     $this->drupalGet('search-api-test-fulltext');
     $assert->elementsCount('css', '.views-row', 5);
     $form = $assert->elementExists('css', 'form#facets-form');
+
     // The form contains only the widget from the module.
     $assert->elementExists('css', 'select#edit-llama--2', $form);
     $assert->elementNotExists('css', 'select#edit-emu--2', $form);
+    $assert->elementNotExists('css', 'select#edit-alpaca--2', $form);
+
     // The form submits and filters the results.
     $page->selectFieldOption('llama[]', 'article');
     $assert->buttonExists('Apply', $form)->press();
@@ -100,6 +105,25 @@ class IntegrationTest extends BrowserTestBase {
     $assert->checkboxChecked('item', $form);
     $assert->checkboxChecked('article', $form);
     $assert->elementsCount('css', '.views-row', 5);
+
+    // Change configured facets.
+    $this->createFacet('Alpaca', 'alpaca');
+    $facet = Facet::load('alpaca');
+    $facet->setWidget('facets_form_dropdown');
+    $facet->save();
+    $this->drupalGet('admin/structure/block/manage/' . $block->id());
+    $assert->fieldNotExists('Emu');
+    $assert->fieldExists('Llama');
+    $assert->fieldExists('Alpaca');
+    $page->checkField('Alpaca');
+    $page->uncheckField('Llama');
+    $page->pressButton('Save block');
+    $this->drupalGet('search-api-test-fulltext');
+    $form = $assert->elementExists('css', 'form#facets-form');
+    $assert->elementExists('css', 'select#edit-alpaca--2', $form);
+    $assert->elementNotExists('css', 'select#edit-llama--2', $form);
+    $assert->elementNotExists('css', 'select#edit-emu--2', $form);
+
   }
 
 }

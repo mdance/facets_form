@@ -7,6 +7,8 @@ namespace Drupal\facets_form\Plugin\Block;
 use Drupal\Core\Block\BlockBase;
 use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\facets\FacetManager\DefaultFacetManager;
+use Drupal\facets_form\FacetsFormWidgetInterface;
 use Drupal\facets_form\Form\FacetsForm;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Form\FormStateInterface;
@@ -31,6 +33,13 @@ class FacetsFormBlock extends BlockBase implements ContainerFactoryPluginInterfa
   protected $formBuilder;
 
   /**
+   * The facets manager.
+   *
+   * @var \Drupal\facets\FacetManager\DefaultFacetManager
+   */
+  protected $facetsManager;
+
+  /**
    * Constructs a new form instance.
    *
    * @param array $configuration
@@ -41,10 +50,13 @@ class FacetsFormBlock extends BlockBase implements ContainerFactoryPluginInterfa
    *   The plugin implementation definition.
    * @param \Drupal\Core\Form\FormBuilderInterface $form_builder
    *   The form builder service.
+   * @param \Drupal\facets\FacetManager\DefaultFacetManager $facets_manager
+   *   The facets manager.
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, FormBuilderInterface $form_builder) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, FormBuilderInterface $form_builder, DefaultFacetManager $facets_manager) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->formBuilder = $form_builder;
+    $this->facetsManager = $facets_manager;
   }
 
   /**
@@ -55,7 +67,8 @@ class FacetsFormBlock extends BlockBase implements ContainerFactoryPluginInterfa
       $configuration,
       $plugin_id,
       $plugin_definition,
-      $container->get('form_builder')
+      $container->get('form_builder'),
+      $container->get('facets.manager'),
     );
   }
 
@@ -70,6 +83,7 @@ class FacetsFormBlock extends BlockBase implements ContainerFactoryPluginInterfa
           'reset' => $this->t('Clear filters'),
         ],
       ],
+      'facets' => [],
     ] + parent::defaultConfiguration();
   }
 
@@ -79,6 +93,24 @@ class FacetsFormBlock extends BlockBase implements ContainerFactoryPluginInterfa
   public function blockForm($form, FormStateInterface $form_state): array {
     $form = parent::blockForm($form, $form_state);
     $config = $this->getConfiguration();
+    $facets = $this->facetsManager->getFacetsByFacetSourceId($this->getDerivativeId());
+    $facets_options = [];
+
+    foreach ($facets as $facet) {
+      // Check if the facet is an instance of the widget created.
+      if ($facet->getWidgetInstance() instanceof FacetsFormWidgetInterface) {
+        $facets_options[$facet->id()] = $facet->getName();
+      }
+    }
+
+    // Creating items if exists.
+    $form['facets'] = [
+      '#type' => 'checkboxes',
+      '#title' => $this->t('Limit to facets'),
+      '#description' => $this->t('Please select the facets you need to be displayed. Please note that if none facets is selected, all facets will be displayed.'),
+      '#options' => $facets_options,
+      '#default_value' => $config['facets'],
+    ];
     $form['submit_label'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Submit button'),
@@ -106,6 +138,7 @@ class FacetsFormBlock extends BlockBase implements ContainerFactoryPluginInterfa
         'reset' => $form_state->getValue('reset_label'),
       ],
     ]);
+    $this->setConfigurationValue('facets', array_keys(array_filter($form_state->getValue('facets'))));
   }
 
   /**

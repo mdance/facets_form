@@ -42,4 +42,10 @@ block.settings.facets_form:*:*:
               label: Submit
             reset:
               type: string
-              label: Reset
+              label: Clear filters
+    facets:
+      type: sequence
+      label: 'Display facets'
+      sequence:
+        type: string
+        label: 'Facet option'
