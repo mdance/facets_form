@@ -56,6 +56,7 @@ class IntegrationTest extends BrowserTestBase {
     $this->createFacet('Emu', 'emu');
     $this->createFacet('Llama', 'llama');
     $facet = Facet::load('llama');
+    $facet->setOnlyVisibleWhenFacetSourceIsVisible(FALSE);
     $facet->setWidget('facets_form_dropdown');
     $facet->save();
     // Place the Facets Form block for a view page source.
@@ -123,7 +124,6 @@ class IntegrationTest extends BrowserTestBase {
     $assert->elementExists('css', 'select#edit-alpaca--2', $form);
     $assert->elementNotExists('css', 'select#edit-llama--2', $form);
     $assert->elementNotExists('css', 'select#edit-emu--2', $form);
-
   }
 
 }

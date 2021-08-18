@@ -65,6 +65,7 @@ class CheckboxWidget extends ArrayWidget implements FacetsFormWidgetInterface {
       '#tree' => TRUE,
       '#title' => $facet->getName(),
       '#title_display' => $facet->get('show_title') ? 'before' : 'invisible',
+      '#access' => !empty($this->processedItems) && !$facet->getOnlyVisibleWhenFacetSourceIsVisible(),
     ];
     foreach ($this->processedItems as $value => $data) {
       $build[$facet_id][$value] = [
@@ -97,7 +98,7 @@ class CheckboxWidget extends ArrayWidget implements FacetsFormWidgetInterface {
    * {@inheritdoc}
    */
   public function prepareValueForUrl(FacetInterface $facet, array &$form, FormStateInterface $form_state): array {
-    return array_keys(array_filter($form_state->getValue($facet->id())));
+    return array_keys(array_filter($form_state->getValue($facet->id(), [])));
   }
 
 }

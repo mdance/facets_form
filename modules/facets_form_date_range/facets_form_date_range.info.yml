@@ -1,0 +1,7 @@
+name: Facets Form Date Range Widget
+description: Provides a date range widget for Facets Form.
+package: Search
+type: module
+core_version_requirement: ^8.9 || ^9.1
+dependencies:
+  - facets_form:facets_form

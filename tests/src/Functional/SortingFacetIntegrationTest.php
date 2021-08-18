@@ -96,6 +96,7 @@ class SortingFacetIntegrationTest extends FacetsTestBase {
     ]));
     $facet = Facet::load('hierarchical_facet');
     $facet->setWidget('facets_form_checkbox', ['indent_class' => 'super-indented']);
+    $facet->setOnlyVisibleWhenFacetSourceIsVisible(FALSE);
     $facet->save();
     $block = $this->drupalPlaceBlock('facets_form:search_api:views_page__search_api_test_view__page_1');
     $this->drupalGet('admin/structure/block/manage/' . $block->id());

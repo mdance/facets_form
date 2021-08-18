@@ -14,7 +14,7 @@ class FacetsFormBlockDeriverTest extends EntityKernelTestBase {
   /**
    * {@inheritdoc}
    */
-  protected static $modules = [
+  public static $modules = [
     'facets',
     'facets_form',
     'rest',
