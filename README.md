@@ -45,7 +45,32 @@ https://www.drupal.org/project/facets/issues/3223956.
 ## Extending
 
 Third-party modules can provide additional widgets to be usable inside forms, by
-implementing the `\Drupal\facets_form\FacetsFormWidgetInterface` interface.
+implementing the `\Drupal\facets_form\FacetsFormWidgetInterface` interface. A
+base template file `facets-form-item--{WIDGET_PLUGIN_ID}.html.twig` should be also
+provided, if the widget decides to render the facet item via `facets_form_item`
+theme.
+
+## Theming
+
+The facet item label is themeable by overriding the `facets_form_item` template.
+The following theme suggestions are available:
+
+* `facets-form-item--{WIDGET_PLUGIN_ID}.html.twig`
+* `facets-form-item--{WIDGET_PLUGIN_ID}--{FACET_SOURCE_PLUGIN_ID}.html.twig`
+
+When building the filename, the underline (`_`) character should be replaced
+with dash (`-`) and the colon (`:`) with two dashes (`--`). For instance, if you
+plan to customize the _Dropdown_ facet item on the form corresponding to the
+`search-api:views-page__search__page_1` facet source, you'll have to copy the
+`templates/facets-form-item--facets-form-dropdown.html.twig` file under your
+theme `templates/` directory as
+
+```
+facets-form-item--facets-form-dropdown--search-api--views-page--search--page-1.html.twig
+```
+
+Or if you want to change all _Dropdown_ facet items from all face sources, just
+override `facets-form-item--facets-form-dropdown.html.twig`.
 
 ## Authors
 

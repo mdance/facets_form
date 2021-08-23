@@ -23,6 +23,7 @@ class CheckboxWidgetTest extends KernelTestBase {
   protected static $modules = [
     'facets',
     'facets_form',
+    'facets_form_test',
   ];
 
   /**
@@ -60,6 +61,7 @@ class CheckboxWidgetTest extends KernelTestBase {
     array $expected_options
   ): void {
     $facet = new Facet(['id' => 'foo'] + $facet_values, 'facets_facet');
+    $facet->setFacetSourceId('facets_form_test');
     $facet->setWidget('facets_form_checkbox', $widget_config);
     $facet->setResults($this->getResults($facet, $data, $active_items));
 
@@ -69,7 +71,7 @@ class CheckboxWidgetTest extends KernelTestBase {
     $this->assertSame($expected_title_display, $build['#title_display']);
     foreach ($checkboxes as $value) {
       $checkbox = $build[$value];
-      $this->assertSame($expected_options[$value], $checkbox['#title']);
+      $this->assertEquals($expected_options[$value], $checkbox['#title']);
       $this->assertSame(in_array($value, $expected_default_values), $checkbox['#default_value']);
       $this->assertSame($expected_disabled, $checkbox['#disabled']);
       $depth = count(explode('.', (string) $value)) - 1;

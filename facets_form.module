@@ -6,3 +6,53 @@
  */
 
 declare(strict_types = 1);
+
+/**
+ * Implements hook_theme().
+ */
+function facets_form_theme(): array {
+  return [
+    'facets_form_item' => [
+      'render element' => 'elements',
+      'variables' => [
+        'facet' => NULL,
+        'facet_source' => NULL,
+        'widget' => NULL,
+        'value' => NULL,
+        'label' => '',
+        'show_count' => FALSE,
+        'count' => NULL,
+        'depth' => 0,
+      ],
+    ],
+    'facets_form_item__facets_form_dropdown' => [
+      'base hook' => 'facets_form_item',
+    ],
+    'facets_form_item__facets_form_checkbox' => [
+      'base hook' => 'facets_form_item',
+    ],
+  ];
+}
+
+/**
+ * Implements hook_theme_suggestions_HOOK().
+ */
+function facets_form_theme_suggestions_facets_form_item(array $variables): array {
+  return [
+    "facets_form_item__{$variables['widget']->getPluginId()}",
+    "facets_form_item__{$variables['widget']->getPluginId()}__" . str_replace(':', '__', $variables['facet_source']->getPluginId()),
+  ];
+}
+
+/**
+ * Prepares variables for facets_form_item__facets_form_dropdown templates.
+ *
+ * Default template: facets-form-item--facets-form-dropdown.html.twig.
+ *
+ * @param array $variables
+ *   The template variables.
+ */
+function template_preprocess_facets_form_item__facets_form_dropdown(array &$variables): void {
+  // Pass the character used for indent.
+  $variables['indent'] = $variables['widget']->getConfiguration()['child_items_prefix'];
+}

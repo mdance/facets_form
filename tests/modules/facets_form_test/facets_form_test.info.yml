@@ -1,0 +1,4 @@
+type: module
+name: 'Facets Form Test'
+description: 'Support module for Facets Form testing.'
+package: Testing

@@ -446,6 +446,7 @@ class SortingFacetIntegrationTest extends FacetsTestBase {
 
     $count = $entity_test_storage->getQuery()
       ->count()
+      ->accessCheck(FALSE)
       ->execute();
 
     $this->entities[1] = $entity_test_storage->create([
@@ -506,6 +507,7 @@ class SortingFacetIntegrationTest extends FacetsTestBase {
     $this->entities[6]->save();
     $count = $entity_test_storage->getQuery()
       ->count()
+      ->accessCheck(FALSE)
       ->execute() - $count;
     $this->assertSame(6, $count);
   }

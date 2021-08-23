@@ -50,22 +50,26 @@ trait FacetsFormWidgetTrait {
    *   The facet item.
    * @param int $depth
    *   The item depth.
+   * @param \Drupal\facets\FacetInterface $facet
+   *   The facet entity.
    *
    * @return \Drupal\Component\Render\MarkupInterface|string
    *   The item label.
    */
-  abstract protected function getOptionLabel(array $item, int $depth);
+  abstract protected function getOptionLabel(array $item, int $depth, FacetInterface $facet);
 
   /**
    * Processes and statically cache the list of items.
    *
    * @param array $items
    *   The list of items.
+   * @param \Drupal\facets\FacetInterface $facet
+   *   The facet entity.
    */
-  protected function processItems(array $items): void {
+  protected function processItems(array $items, FacetInterface $facet): void {
     if (!isset($this->processedItems)) {
       $this->processedItems = [];
-      $this->doProcessItems($items);
+      $this->doProcessItems($items, $facet);
     }
   }
 
@@ -74,19 +78,21 @@ trait FacetsFormWidgetTrait {
    *
    * @param array $items
    *   The list of items.
+   * @param \Drupal\facets\FacetInterface $facet
+   *   The facet entity.
    * @param int $depth
    *   (optional) The "zero based" depth of the current items. Used internally.
    */
-  protected function doProcessItems(array $items, int $depth = -1): void {
+  protected function doProcessItems(array $items, FacetInterface $facet, int $depth = -1): void {
     $depth++;
     foreach ($items as $item) {
       $this->processedItems[$item['raw_value']] = [
-        'label' => $this->getOptionLabel($item, $depth),
+        'label' => $this->getOptionLabel($item, $depth, $facet),
         'default' => !empty($item['values']['active']),
         'depth' => $depth,
       ];
       if (!empty($item['children'])) {
-        $this->doProcessItems($item['children'][0], $depth);
+        $this->doProcessItems($item['children'][0], $facet, $depth);
       }
     }
   }

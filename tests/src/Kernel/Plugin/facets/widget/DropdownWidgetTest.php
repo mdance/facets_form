@@ -22,6 +22,7 @@ class DropdownWidgetTest extends KernelTestBase {
   protected static $modules = [
     'facets',
     'facets_form',
+    'facets_form_test',
   ];
 
   /**
@@ -62,6 +63,7 @@ class DropdownWidgetTest extends KernelTestBase {
     array $expected_options
   ): void {
     $facet = new Facet(['id' => 'foo'] + $facet_values, 'facets_facet');
+    $facet->setFacetSourceId('facets_form_test');
     $facet->setWidget('facets_form_dropdown', $widget_config);
     $facet->setResults($this->getResults($facet, $data, $active_items));
 

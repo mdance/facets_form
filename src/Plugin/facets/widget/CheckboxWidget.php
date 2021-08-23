@@ -4,11 +4,15 @@ declare(strict_types = 1);
 
 namespace Drupal\facets_form\Plugin\facets\widget;
 
+use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\Render\RendererInterface;
 use Drupal\facets\FacetInterface;
 use Drupal\facets\Plugin\facets\widget\ArrayWidget;
 use Drupal\facets_form\FacetsFormWidgetInterface;
 use Drupal\facets_form\FacetsFormWidgetTrait;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Form element alternative to 'checkbox' widget.
@@ -19,9 +23,45 @@ use Drupal\facets_form\FacetsFormWidgetTrait;
  *   description = @Translation("A configurable widget that shows checkboxes as a form element."),
  * )
  */
-class CheckboxWidget extends ArrayWidget implements FacetsFormWidgetInterface {
+class CheckboxWidget extends ArrayWidget implements FacetsFormWidgetInterface, ContainerFactoryPluginInterface {
 
   use FacetsFormWidgetTrait;
+
+  /**
+   * The renderer service.
+   *
+   * @var \Drupal\Core\Render\RendererInterface
+   */
+  protected $renderer;
+
+  /**
+   * Constructs a new facet plugin instance.
+   *
+   * @param array $configuration
+   *   A configuration array containing information about the plugin instance.
+   * @param string $plugin_id
+   *   The plugin_id for the plugin instance.
+   * @param mixed $plugin_definition
+   *   The plugin implementation definition.
+   * @param \Drupal\Core\Render\RendererInterface $renderer
+   *   The renderer service.
+   */
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, RendererInterface $renderer) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition);
+    $this->renderer = $renderer;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): self {
+    return new static(
+      $configuration,
+      $plugin_id,
+      $plugin_definition,
+      $container->get('renderer')
+    );
+  }
 
   /**
    * {@inheritdoc}
@@ -57,7 +97,7 @@ class CheckboxWidget extends ArrayWidget implements FacetsFormWidgetInterface {
   public function build(FacetInterface $facet): array {
     $items = parent::build($facet)[$facet->getFieldIdentifier()] ?? [];
 
-    $this->processItems($items);
+    $this->processItems($items, $facet);
 
     $facet_id = $facet->id();
     $build[$facet_id] = [
@@ -86,12 +126,19 @@ class CheckboxWidget extends ArrayWidget implements FacetsFormWidgetInterface {
   /**
    * {@inheritdoc}
    */
-  protected function getOptionLabel(array $item, int $depth) {
-    $text = $item['values']['value'];
-    if ($this->getConfiguration()['show_numbers']) {
-      $text .= " ({$item['values']['count']})";
-    }
-    return $text;
+  protected function getOptionLabel(array $item, int $depth, FacetInterface $facet) {
+    $build = [
+      '#theme' => 'facets_form_item',
+      '#facet' => $facet,
+      '#facet_source' => $facet->getFacetSource(),
+      '#widget' => $this,
+      '#value' => $item['raw_value'],
+      '#label' => $item['values']['value'],
+      '#show_count' => $this->getConfiguration()['show_numbers'],
+      '#count' => $item['values']['count'] ?? NULL,
+      '#depth' => $depth,
+    ];
+    return $this->renderer->renderPlain($build);
   }
 
   /**

@@ -227,7 +227,7 @@ class DateRangeWidget extends ArrayWidget implements FacetsFormWidgetInterface, 
   /**
    * {@inheritdoc}
    */
-  protected function getOptionLabel(array $item, int $depth) {
+  protected function getOptionLabel(array $item, int $depth, FacetInterface $facet) {
   }
 
 }
