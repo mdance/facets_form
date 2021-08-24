@@ -4,7 +4,6 @@ declare(strict_types = 1);
 
 namespace Drupal\facets_form\Plugin\facets\widget;
 
-use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Render\RendererInterface;

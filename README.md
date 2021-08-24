@@ -46,9 +46,9 @@ https://www.drupal.org/project/facets/issues/3223956.
 
 Third-party modules can provide additional widgets to be usable inside forms, by
 implementing the `\Drupal\facets_form\FacetsFormWidgetInterface` interface. A
-base template file `facets-form-item--{WIDGET_PLUGIN_ID}.html.twig` should be also
-provided, if the widget decides to render the facet item via `facets_form_item`
-theme.
+base template file `facets-form-item--{WIDGET_PLUGIN_ID}.html.twig` should be
+also provided, if the widget decides to render the facet item via
+`facets_form_item` theme.
 
 ## Theming
 
