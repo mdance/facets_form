@@ -68,7 +68,7 @@ class FacetsFormBlock extends BlockBase implements ContainerFactoryPluginInterfa
       $plugin_id,
       $plugin_definition,
       $container->get('form_builder'),
-      $container->get('facets.manager'),
+      $container->get('facets.manager')
     );
   }
 
