@@ -148,4 +148,23 @@ class FacetsFormBlock extends BlockBase implements ContainerFactoryPluginInterfa
     return $this->formBuilder->getForm(FacetsForm::class, $this->getDerivativeId(), $this->getConfiguration());
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function calculateDependencies(): array {
+    $dependencies = [];
+    $facets = $this->facetsManager->getFacetsByFacetSourceId($this->getDerivativeId());
+    $config = $this->getConfiguration();
+    foreach ($facets as $facet) {
+      // Check if the facet is an instance of the widget created.
+      if ($facet->getWidgetInstance() instanceof FacetsFormWidgetInterface) {
+        if (empty($config['facets']) || in_array($facet->id(), $config['facets'])) {
+          $dependencies[$facet->getConfigDependencyKey()][] = $facet->getConfigDependencyName();
+        }
+      }
+    }
+
+    return $dependencies;
+  }
+
 }
