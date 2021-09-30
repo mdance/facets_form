@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Drupal\facets_form\Plugin\facets\widget;
 
+use Drupal\Component\Serialization\Json;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Render\RendererInterface;
@@ -113,13 +114,14 @@ class DropdownWidget extends ArrayWidget implements FacetsFormWidgetInterface, C
 
     $this->processItems($items, $facet);
 
-    $options = [];
+    $options = $ancestors = [];
     if ($facet->getShowOnlyOneResult()) {
       $options[NULL] = $this->getConfiguration()['default_option_label'];
     }
-    $options += array_map(function (array $item) {
-      return $item['label'];
-    }, $this->processedItems);
+    foreach ($this->processedItems as $value => $data) {
+      $options[$value] = $data['label'];
+      $ancestors[$value] = $data['ancestors'] ?? [];
+    }
 
     return [
       $facet->id() => [
@@ -132,26 +134,11 @@ class DropdownWidget extends ArrayWidget implements FacetsFormWidgetInterface, C
         })),
         '#multiple' => !$facet->getShowOnlyOneResult(),
         '#disabled' => $this->getConfiguration()['disabled_on_empty'] && empty($items),
+        '#attributes' => [
+          'data-drupal-facets-form-ancestors' => Json::encode($ancestors),
+        ],
       ],
     ];
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function getOptionLabel(array $item, int $depth, FacetInterface $facet) {
-    $build = [
-      '#theme' => 'facets_form_item',
-      '#facet' => $facet,
-      '#facet_source' => $facet->getFacetSource(),
-      '#widget' => $this,
-      '#value' => $item['raw_value'],
-      '#label' => $item['values']['value'],
-      '#show_count' => $this->getConfiguration()['show_numbers'],
-      '#count' => $item['values']['count'] ?? NULL,
-      '#depth' => $depth,
-    ];
-    return $this->renderer->renderPlain($build);
   }
 
 }

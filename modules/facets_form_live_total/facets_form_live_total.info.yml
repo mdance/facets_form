@@ -1,0 +1,8 @@
+name: Facets Form Live Total
+description: Provides live results count for the facets summary.
+package: Search
+type: module
+core_version_requirement: ^8.9 || ^9.1
+dependencies:
+  - facets_form:facets_form
+  - facets:facets_summary

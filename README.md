@@ -39,8 +39,12 @@ https://www.drupal.org/project/facets/issues/3223956.
   native widgets:
   * Dropdown (inside form) `facets_form_dropdown`
   * Checkboxes (inside form) `facets_form_checkbox`
-* The `facets_form_date_range` sub-module provides a third, bonus, date range
-  widget.
+
+### Submodules
+
+* `facets_form_date_range`: Provides a third, bonus, date range widget.
+* `facets_form_live_total`: A module that allows to dynamically update the
+  Facets Summary total as the user interacts with the Facets Form widgets.
 
 ## Extending
 
@@ -49,6 +53,22 @@ implementing the `\Drupal\facets_form\FacetsFormWidgetInterface` interface. A
 base template file `facets-form-item--{WIDGET_PLUGIN_ID}.html.twig` should be
 also provided, if the widget decides to render the facet item via
 `facets_form_item` theme.
+
+### Javascript
+
+Client side interaction with facets form widgets will trigger a custom
+Javascript event, names `facets_form` if, at least, one subscriber of the
+`\Drupal\facets_form\Event\TriggerWidgetChangeJavaScriptEvent` has enabled this
+feature. An example can be found in the `facets_form_live_total` sub-module.
+
+Third-party code can add listeners to this event to fulfill their business
+logic. For instance, the `facets_form_live_total` sub-module listens to browser
+widgets updates and is dynamically refreshes the facets summary total.
+
+Widgets should ship with specific Javascript snippets, with the name matching
+the plugin ID and having the `.js` extension, placed under the plugin module
+`js/plugin` directory, in order to event dispatching support. There's no need
+for a library explicit definition, Facets Form will discover them automatically.
 
 ## Theming
 

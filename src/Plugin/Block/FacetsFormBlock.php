@@ -125,6 +125,7 @@ class FacetsFormBlock extends BlockBase implements ContainerFactoryPluginInterfa
       '#default_value' => $config['button']['label']['reset'],
       '#required' => TRUE,
     ];
+
     return $form;
   }
 
@@ -132,6 +133,7 @@ class FacetsFormBlock extends BlockBase implements ContainerFactoryPluginInterfa
    * {@inheritdoc}
    */
   public function blockSubmit($form, FormStateInterface $form_state): void {
+    parent::blockSubmit($form, $form_state);
     $this->setConfigurationValue('button', [
       'label' => [
         'submit' => $form_state->getValue('submit_label'),
@@ -145,7 +147,9 @@ class FacetsFormBlock extends BlockBase implements ContainerFactoryPluginInterfa
    * {@inheritdoc}
    */
   public function build(): array {
-    return $this->formBuilder->getForm(FacetsForm::class, $this->getDerivativeId(), $this->getConfiguration());
+    return [
+      'form' => $this->formBuilder->getForm(FacetsForm::class, $this->getDerivativeId(), $this->getConfiguration()),
+    ];
   }
 
   /**

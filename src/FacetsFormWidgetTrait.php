@@ -56,7 +56,20 @@ trait FacetsFormWidgetTrait {
    * @return \Drupal\Component\Render\MarkupInterface|string
    *   The item label.
    */
-  abstract protected function getOptionLabel(array $item, int $depth, FacetInterface $facet);
+  protected function getOptionLabel(array $item, int $depth, FacetInterface $facet) {
+    $build = [
+      '#theme' => 'facets_form_item',
+      '#facet' => $facet,
+      '#facet_source' => $facet->getFacetSource(),
+      '#widget' => $this,
+      '#value' => $item['raw_value'],
+      '#label' => $item['values']['value'],
+      '#show_count' => $this->getConfiguration()['show_numbers'],
+      '#count' => $item['values']['count'] ?? NULL,
+      '#depth' => $depth,
+    ];
+    return $this->renderer->renderPlain($build);
+  }
 
   /**
    * Processes and statically cache the list of items.
@@ -70,6 +83,10 @@ trait FacetsFormWidgetTrait {
     if (!isset($this->processedItems)) {
       $this->processedItems = [];
       $this->doProcessItems($items, $facet);
+      // Builds the ancestors list for each item.
+      foreach ($this->processedItems as $value => $data) {
+        $this->doProcessAncestors($value);
+      }
     }
   }
 
@@ -92,7 +109,28 @@ trait FacetsFormWidgetTrait {
         'depth' => $depth,
       ];
       if (!empty($item['children'])) {
+        $this->processedItems[$item['raw_value']]['children'] = array_map(function (array $children) {
+          return $children['raw_value'];
+        }, $item['children'][0]);
         $this->doProcessItems($item['children'][0], $facet, $depth);
+      }
+    }
+  }
+
+  /**
+   * Builds the ancestor list.
+   *
+   * @param mixed $value
+   *   The item value.
+   */
+  protected function doProcessAncestors($value): void {
+    if (isset($this->processedItems[$value]['children'])) {
+      foreach ($this->processedItems[$value]['children'] as $child) {
+        $this->processedItems[$child]['ancestors'] = $this->processedItems[$child]['ancestors'] ?? ($this->processedItems[$value]['ancestors'] ?? []);
+        if (!in_array($value, $this->processedItems[$child]['ancestors'])) {
+          $this->processedItems[$child]['ancestors'][] = (string) $value;
+        }
+        $this->doProcessAncestors($child);
       }
     }
   }

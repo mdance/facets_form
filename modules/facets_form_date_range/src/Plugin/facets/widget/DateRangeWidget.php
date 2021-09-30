@@ -11,6 +11,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\facets\FacetInterface;
 use Drupal\facets\Plugin\facets\widget\ArrayWidget;
+use Drupal\facets\Result\Result;
 use Drupal\facets_form\FacetsFormWidgetInterface;
 use Drupal\facets_form\FacetsFormWidgetTrait;
 use Drupal\facets_form_date_range\DateRange;
@@ -172,38 +173,48 @@ class DateRangeWidget extends ArrayWidget implements FacetsFormWidgetInterface, 
    * {@inheritdoc}
    */
   public function build(FacetInterface $facet) {
-    $build[$facet->id()] = [
-      // @todo How to test if there are results?
-      '#type' => 'container',
-      '#tree' => TRUE,
-    ];
-
     $date_range = DateRange::createFromFacet($facet);
     $configuration = $facet->getWidgetInstance()->getConfiguration();
     $date_time_element = $configuration['date_type'] === DateRange::TYPE_DATE ? 'none' : 'time';
 
-    $build[$facet->id()]['from'] = [
-      '#type' => 'datetime',
-      '#title' => $configuration['label']['from'],
-      '#date_date_element' => 'date',
-      '#date_time_element' => $date_time_element,
-      '#default_value' => $date_range->getFrom(),
-    ];
-    $build[$facet->id()]['to'] = [
-      '#type' => 'datetime',
-      '#title' => $configuration['label']['to'],
-      '#date_date_element' => 'date',
-      '#date_time_element' => $date_time_element,
-      '#default_value' => $date_range->getTo(),
-    ];
+    // Set fake results so that the build will not consider the empty behaviour.
+    // @see \Drupal\facets\FacetManager\DefaultFacetManager::build()
+    $facet->setResults([new Result($facet, NULL, NULL, 0)]);
 
-    // @todo Revisit in OEL-329.
-    $build['#cache']['contexts'] = [
-      'url.query_args',
-      'url.path',
+    return [
+      $facet->id() => [
+        '#type' => 'fieldset',
+        '#tree' => TRUE,
+        '#title' => $facet->get('show_title') ? $facet->getName() : NULL,
+        'from' => [
+          '#type' => 'datetime',
+          '#title' => $configuration['label']['from'],
+          '#date_date_element' => 'date',
+          '#date_time_element' => $date_time_element,
+          '#default_value' => $date_range->getFrom(),
+          '#attributes' => [
+            'data-timezone' => $date_range->getFromTimezone(),
+          ],
+        ],
+        'to' => [
+          '#type' => 'datetime',
+          '#title' => $configuration['label']['to'],
+          '#date_date_element' => 'date',
+          '#date_time_element' => $date_time_element,
+          '#date_time_format' => 'H:i:sP',
+          '#default_value' => $date_range->getTo(),
+          '#attributes' => [
+            'data-timezone' => $date_range->getToTimezone(),
+          ],
+        ],
+        '#cache' => [
+          'contexts' => [
+            'url.query_args',
+            'url.path',
+          ],
+        ],
+      ],
     ];
-
-    return $build;
   }
 
   /**

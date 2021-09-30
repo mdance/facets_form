@@ -4,8 +4,10 @@ declare(strict_types = 1);
 
 namespace Drupal\facets_form\Plugin\facets\widget;
 
+use Drupal\Component\Serialization\Json;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\Render\Element;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\facets\FacetInterface;
 use Drupal\facets\Plugin\facets\widget\ArrayWidget;
@@ -98,46 +100,58 @@ class CheckboxWidget extends ArrayWidget implements FacetsFormWidgetInterface, C
 
     $this->processItems($items, $facet);
 
-    $facet_id = $facet->id();
-    $build[$facet_id] = [
-      '#type' => 'fieldset',
-      '#tree' => TRUE,
-      '#title' => $facet->getName(),
-      '#title_display' => $facet->get('show_title') ? 'before' : 'invisible',
-      '#access' => !empty($this->processedItems) && !$facet->getOnlyVisibleWhenFacetSourceIsVisible(),
-    ];
+    $options = $default_value = $depths = $ancestors = [];
     foreach ($this->processedItems as $value => $data) {
-      $build[$facet_id][$value] = [
-        // @todo Honour 'Ensure that only one result can be displayed' config.
-        // @see https://www.drupal.org/project/facets_form/issues/3227076
-        '#type' => 'checkbox',
-        '#title' => $data['label'],
-        '#default_value' => $data['default'],
-        '#disabled' => $this->getConfiguration()['disabled_on_empty'] && empty($items),
-        '#prefix' => str_repeat('<div class="' . $this->getConfiguration()['indent_class'] . '">', $data['depth']),
-        '#suffix' => str_repeat('</div>', $data['depth']),
-      ];
+      $options[$value] = $data['label'];
+      if ($data['default']) {
+        $default_value[] = $value;
+      }
+      $depths[$value] = $data['depth'];
+      $ancestors[$value] = $data['ancestors'] ?? [];
     };
 
-    return $build;
+    return [
+      $facet->id() => [
+        '#type' => 'fieldset',
+        '#title' => $facet->get('show_title') ? $facet->getName() : NULL,
+        '#access' => !empty($this->processedItems) && !$facet->getOnlyVisibleWhenFacetSourceIsVisible(),
+        '#attributes' => [
+          'data-drupal-facets-form-ancestors' => Json::encode($ancestors),
+        ],
+        $facet->id() => [
+          // @todo Honour 'Ensure that only one result can be displayed' config.
+          // @see https://www.drupal.org/project/facets_form/issues/3227076
+          '#type' => 'checkboxes',
+          // @todo This is not working. Open a followup.
+          '#disabled' => $this->getConfiguration()['disabled_on_empty'] && empty($items),
+          '#options' => $options,
+          '#default_value' => $default_value,
+          '#after_build' => [[static::class, 'indentCheckboxes']],
+          '#depths' => $depths,
+          '#ancestors' => $ancestors,
+          '#indent_class' => $this->getConfiguration()['indent_class'],
+        ],
+      ],
+    ];
   }
 
   /**
-   * {@inheritdoc}
+   * Wraps each checkbox in indent containers, depending on their depth.
+   *
+   * @param array $element
+   *   The 'checkboxes' element.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The state of the form.
+   *
+   * @return array
+   *   The element.
    */
-  protected function getOptionLabel(array $item, int $depth, FacetInterface $facet) {
-    $build = [
-      '#theme' => 'facets_form_item',
-      '#facet' => $facet,
-      '#facet_source' => $facet->getFacetSource(),
-      '#widget' => $this,
-      '#value' => $item['raw_value'],
-      '#label' => $item['values']['value'],
-      '#show_count' => $this->getConfiguration()['show_numbers'],
-      '#count' => $item['values']['count'] ?? NULL,
-      '#depth' => $depth,
-    ];
-    return $this->renderer->renderPlain($build);
+  public static function indentCheckboxes(array $element, FormStateInterface $form_state): array {
+    foreach (Element::children($element) as $value) {
+      $element[$value]['#prefix'] = str_repeat('<div class="' . $element['#indent_class'] . '">', $element['#depths'][$value]);
+      $element[$value]['#suffix'] = str_repeat('</div>', $element['#depths'][$value]);
+    }
+    return $element;
   }
 
   /**

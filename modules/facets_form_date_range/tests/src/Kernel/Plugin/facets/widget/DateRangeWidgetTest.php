@@ -51,7 +51,7 @@ class DateRangeWidgetTest extends KernelTestBase {
     $facet->setWidget('facets_form_date_range', $widget_config);
 
     $build = $facet->getWidgetInstance()->build($facet)['foo'];
-    $this->assertSame('container', $build['#type']);
+    $this->assertSame('fieldset', $build['#type']);
     $this->assertSame('datetime', $build['from']['#type']);
     $this->assertEquals($from_label, $build['from']['#title']);
     $this->assertSame('date', $build['from']['#date_date_element']);

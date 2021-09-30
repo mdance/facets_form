@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Drupal\facets_form\Form;
 
+use Drupal\Core\Asset\LibraryDiscoveryInterface;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
@@ -11,8 +12,10 @@ use Drupal\Core\Url;
 use Drupal\facets\FacetInterface;
 use Drupal\facets\FacetManager\DefaultFacetManager;
 use Drupal\facets\Utility\FacetsUrlGenerator;
+use Drupal\facets_form\Event\TriggerWidgetChangeJavaScriptEvent;
 use Drupal\facets_form\FacetsFormWidgetInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Exposes the facets as a form.
@@ -34,16 +37,36 @@ class FacetsForm extends FormBase {
   protected $facetsUrlGenerator;
 
   /**
-   * Constructs an instance of ListFacetsForm.
+   * The event dispatcher service.
+   *
+   * @var \Symfony\Component\EventDispatcher\EventDispatcherInterface
+   */
+  protected $eventDispatcher;
+
+  /**
+   * The library discovery service.
+   *
+   * @var \Drupal\Core\Asset\LibraryDiscoveryInterface
+   */
+  protected $libraryDiscovery;
+
+  /**
+   * Constructs a new form instance.
    *
    * @param \Drupal\facets\FacetManager\DefaultFacetManager $facets_manager
    *   The facets manager.
    * @param \Drupal\facets\Utility\FacetsUrlGenerator $facets_url_generator
    *   The facets url generator.
+   * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $event_dispatcher
+   *   The event dispatcher service.
+   * @param \Drupal\Core\Asset\LibraryDiscoveryInterface $library_discovery
+   *   The library discovery service.
    */
-  public function __construct(DefaultFacetManager $facets_manager, FacetsUrlGenerator $facets_url_generator) {
+  public function __construct(DefaultFacetManager $facets_manager, FacetsUrlGenerator $facets_url_generator, EventDispatcherInterface $event_dispatcher, LibraryDiscoveryInterface $library_discovery) {
     $this->facetsManager = $facets_manager;
     $this->facetsUrlGenerator = $facets_url_generator;
+    $this->eventDispatcher = $event_dispatcher;
+    $this->libraryDiscovery = $library_discovery;
   }
 
   /**
@@ -52,7 +75,9 @@ class FacetsForm extends FormBase {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('facets.manager'),
-      $container->get('facets.utility.url_generator')
+      $container->get('facets.utility.url_generator'),
+      $container->get('event_dispatcher'),
+      $container->get('library.discovery')
     );
   }
 
@@ -78,12 +103,32 @@ class FacetsForm extends FormBase {
       return $a->getWeight() <=> $b->getWeight();
     });
 
+    $event = new TriggerWidgetChangeJavaScriptEvent($source_id, $config);
+    $this->eventDispatcher->dispatch(TriggerWidgetChangeJavaScriptEvent::class, $event);
+    if ($trigger_widget_change_event = $event->shouldTriggerWidgetChangeEvent()) {
+      $libraries = $this->libraryDiscovery->getLibrariesByExtension('facets_form');
+    }
+
+    $has_plugin_library = FALSE;
     foreach ($facets as $facet) {
       $widget = $facet->getWidgetInstance();
-      if ($widget instanceof FacetsFormWidgetInterface &&
-        (empty($config['facets']) || in_array($facet->id(), $config['facets']))) {
-        $form['facets'][$facet->id()] = $this->facetsManager->build($facet);
+      if ($widget instanceof FacetsFormWidgetInterface && (empty($config['facets']) || in_array($facet->id(), $config['facets']))) {
+        $build = $this->facetsManager->build($facet);
+        $build[0][$facet->id()]['#attributes']['data-drupal-facets-form-widget'] = $widget->getPluginId();
+        $build[0][$facet->id()]['#attributes']['data-drupal-facets-form-facet'] = $facet->id();
+        if ($trigger_widget_change_event) {
+          $library = "plugin.{$widget->getPluginId()}";
+          if (isset($libraries[$library])) {
+            $build['#attached']['library'][] = "facets_form/{$library}";
+            $has_plugin_library = TRUE;
+          }
+        }
+        $form['facets'][$facet->id()] = $build;
       }
+    }
+
+    if ($has_plugin_library) {
+      $form['facets']['#attached']['library'][] = "facets_form/plugin_base";
     }
 
     if (!isset($form['facets'])) {
@@ -92,6 +137,7 @@ class FacetsForm extends FormBase {
     }
 
     $form_state->set('source_id', $source_id);
+    $form_state->set('block_settings', $config);
 
     $form['actions']['#type'] = 'actions';
     $form['actions']['submit'] = [
@@ -107,6 +153,9 @@ class FacetsForm extends FormBase {
       ],
       '#url' => Url::fromRoute('<current>'),
     ];
+
+    // Mark this form as facets form.
+    $form['#attributes']['data-drupal-facets-form'] = $source_id;
 
     $cache->applyTo($form);
 

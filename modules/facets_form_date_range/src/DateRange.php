@@ -233,6 +233,26 @@ class DateRange {
   }
 
   /**
+   * Returns the beginning date timezone as formatted offset.
+   *
+   * @return string|null
+   *   The beginning date timezone as formatted offset.
+   */
+  public function getFromTimezone(): ?string {
+    return $this->getFrom() ? $this->getFrom()->format('P') : NULL;
+  }
+
+  /**
+   * Returns the ending date timezone as formatted offset.
+   *
+   * @return string|null
+   *   The ending date timezone as formatted offset.
+   */
+  public function getToTimezone(): ?string {
+    return $this->getTo() ? $this->getTo()->format('P') : NULL;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function __toString(): string {

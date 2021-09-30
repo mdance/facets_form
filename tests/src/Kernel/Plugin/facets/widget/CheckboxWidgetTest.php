@@ -4,7 +4,6 @@ declare(strict_types = 1);
 
 namespace Drupal\Tests\facets_form\Kernel\Plugin\facets\widget;
 
-use Drupal\Core\Render\Element;
 use Drupal\facets\Entity\Facet;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\Tests\facets_form\Traits\FacetsFormWidgetTestTrait;
@@ -37,8 +36,8 @@ class CheckboxWidgetTest extends KernelTestBase {
    *   The used to build the results.
    * @param array $active_items
    *   Active items.
-   * @param string $expected_title_display
-   *   Widget '#title_display' expectation.
+   * @param string|null $expected_title
+   *   Widget '#title' expectation.
    * @param array $expected_default_values
    *   Widget '#default_value' expectation.
    * @param bool $expected_disabled
@@ -55,7 +54,7 @@ class CheckboxWidgetTest extends KernelTestBase {
     array $widget_config,
     array $data,
     array $active_items,
-    string $expected_title_display,
+    ?string $expected_title,
     array $expected_default_values,
     bool $expected_disabled,
     array $expected_options
@@ -66,19 +65,13 @@ class CheckboxWidgetTest extends KernelTestBase {
     $facet->setResults($this->getResults($facet, $data, $active_items));
 
     $build = $facet->getWidgetInstance()->build($facet)['foo'];
-    $checkboxes = Element::children($build);
-    $this->assertCount(count($data, COUNT_RECURSIVE), $checkboxes);
-    $this->assertSame($expected_title_display, $build['#title_display']);
-    foreach ($checkboxes as $value) {
-      $checkbox = $build[$value];
-      $this->assertEquals($expected_options[$value], $checkbox['#title']);
-      $this->assertSame(in_array($value, $expected_default_values), $checkbox['#default_value']);
-      $this->assertSame($expected_disabled, $checkbox['#disabled']);
-      $depth = count(explode('.', (string) $value)) - 1;
-      $expected_prefix = str_repeat('<div class="indented">', $depth);
-      $expected_suffix = str_repeat('</div>', $depth);
-      $this->assertSame($expected_prefix, $checkbox['#prefix']);
-      $this->assertSame($expected_suffix, $checkbox['#suffix']);
+    $this->assertSame('fieldset', $build['#type']);
+    $this->assertCount(count($data, COUNT_RECURSIVE), $build[$facet->id()]['#options']);
+    $this->assertEquals($expected_title, $build['#title']);
+    $this->assertEquals($expected_default_values, $build[$facet->id()]['#default_value']);
+    $this->assertSame($expected_disabled, $build[$facet->id()]['#disabled']);
+    foreach ($build[$facet->id()]['#options'] as $value => $label) {
+      $this->assertEquals($expected_options[$value], $label);
     }
   }
 
@@ -91,7 +84,10 @@ class CheckboxWidgetTest extends KernelTestBase {
   public function providerTestPlugin(): array {
     return [
       'default' => [
-        [],
+        [
+          'name' => 'Baz',
+          'show_title' => TRUE,
+        ],
         [],
         [
           '1' => [
@@ -108,7 +104,7 @@ class CheckboxWidgetTest extends KernelTestBase {
           ],
         ],
         ['1.1', '2'],
-        'invisible',
+        'Baz',
         ['1.1', '2'],
         FALSE,
         [
@@ -126,19 +122,23 @@ class CheckboxWidgetTest extends KernelTestBase {
       // @see https://www.drupal.org/project/facets_form/issues/3227076
       // 'show_only_one_result' => [],
       'empty_items' => [
-        [],
+        [
+          'name' => 'Baz',
+          'show_title' => FALSE,
+        ],
         [
           'disabled_on_empty' => TRUE,
         ],
         [],
         [],
-        'invisible',
+        NULL,
         [],
         TRUE,
         [],
       ],
       'with_show_number' => [
         [
+          'name' => 'Baz',
           'show_title' => TRUE,
         ],
         [
@@ -149,7 +149,7 @@ class CheckboxWidgetTest extends KernelTestBase {
           '2' => [],
         ],
         ['1'],
-        'before',
+        'Baz',
         ['1'],
         FALSE,
         [
