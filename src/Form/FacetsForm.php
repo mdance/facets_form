@@ -103,6 +103,7 @@ class FacetsForm extends FormBase {
       return $a->getWeight() <=> $b->getWeight();
     });
 
+    // Ask 3rd-party if they want to enable Javascript capability.
     $event = new TriggerWidgetChangeJavaScriptEvent($source_id, $config);
     $this->eventDispatcher->dispatch(TriggerWidgetChangeJavaScriptEvent::class, $event);
     if ($trigger_widget_change_event = $event->shouldTriggerWidgetChangeEvent()) {
@@ -151,7 +152,7 @@ class FacetsForm extends FormBase {
       '#attributes' => [
         'class' => ['button'],
       ],
-      '#url' => Url::fromRoute('<current>'),
+      '#url' => $this->buildRedirectUrl(TRUE),
     ];
 
     // Mark this form as facets form.
@@ -182,8 +183,8 @@ class FacetsForm extends FormBase {
     }
 
     // If there are no active filters, we redirect to the current URL without
-    // any filters in the URL.
-    $form_state->setRedirectUrl(Url::fromRoute('<current>'));
+    // any filters in the URL but still preserving non-filter query parameters.
+    $form_state->setRedirectUrl($this->buildRedirectUrl());
   }
 
   /**
@@ -191,6 +192,28 @@ class FacetsForm extends FormBase {
    */
   public function getFormId(): string {
     return 'facets_form';
+  }
+
+  /**
+   * Builds the redirect URL and optionally excludes the filters from query.
+   *
+   * Used to build the URL either when resetting the filters or when the form is
+   * submitted with no active filters.
+   *
+   * @param bool $exclude_filters
+   *   (optional) Whether to exclude the facets filters. Defaults to FALSE.
+   *
+   * @return \Drupal\Core\Url
+   *   An URL object.
+   */
+  protected function buildRedirectUrl(bool $exclude_filters = FALSE): Url {
+    $query = $this->getRequest()->query->all();
+    if ($exclude_filters) {
+      // @todo For now we're only providing support for the `query_string`
+      //   facets URL processor.
+      unset($query['f']);
+    }
+    return Url::fromRoute('<current>', [], ['query' => $query]);
   }
 
 }
