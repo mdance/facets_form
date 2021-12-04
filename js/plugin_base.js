@@ -81,6 +81,8 @@
       values.forEach(value => {
         return value.toString();
       })
+      // Don't handle empty values. These are "no filter for this facet" values.
+      values = values.filter(value => value !== "");
 
       // Compute the changes.
       const diff = {
