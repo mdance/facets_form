@@ -232,7 +232,7 @@ class DateRangeWidget extends ArrayWidget implements FacetsFormWidgetInterface, 
    * {@inheritdoc}
    */
   public function getQueryType(): string {
-    return 'date_comparison';
+    return 'facets_form_date_range';
   }
 
   /**
