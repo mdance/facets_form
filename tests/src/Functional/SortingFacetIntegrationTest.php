@@ -10,6 +10,7 @@ use Drupal\facets\Entity\Facet;
 use Drupal\search_api\Item\Field;
 use Drupal\taxonomy\Entity\Term;
 use Drupal\Tests\facets\Functional\FacetsTestBase;
+use Drupal\Tests\facets_form\Traits\FacetUrlTestTrait;
 use Drupal\Tests\field\Traits\EntityReferenceTestTrait;
 use Drupal\Tests\taxonomy\Traits\TaxonomyTestTrait;
 
@@ -21,6 +22,7 @@ use Drupal\Tests\taxonomy\Traits\TaxonomyTestTrait;
 class SortingFacetIntegrationTest extends FacetsTestBase {
 
   use EntityReferenceTestTrait;
+  use FacetUrlTestTrait;
   use TaxonomyTestTrait;
 
   /**
@@ -174,6 +176,9 @@ class SortingFacetIntegrationTest extends FacetsTestBase {
     $this->drupalGet('search-api-test-fulltext');
     $form->checkField('Parent 2');
     $form->pressButton('Search');
+    $this->assertCurrentUrl('search-api-test-fulltext', [
+      'f' => ['hierarchical_facet:' . $this->parents['Parent 2']->id()],
+    ]);
     $this->responseContentHasOrder([
       'Parent 1', 'Child 1',
       'Child 2', 'Parent 2',
@@ -198,10 +203,12 @@ class SortingFacetIntegrationTest extends FacetsTestBase {
     $this->submitForm($edit, 'Save');
     $this->drupalGet('search-api-test-fulltext');
     $form = $assert->elementExists('css', 'form#facets-form');
-    $form->checkField($this->parents['Parent 2']->id());
+    $form->checkField('Parent 2');
     $form->pressButton('Search');
-    $assert->addressEquals('search-api-test-fulltext?f[0]=hierarchical_facet:' . $this->parents['Parent 2']->id());
-    $assert->checkboxChecked($this->parents['Parent 2']->id());
+    $this->assertCurrentUrl('search-api-test-fulltext', [
+      'f' => ['hierarchical_facet:' . $this->parents['Parent 2']->id()],
+    ]);
+    $assert->checkboxChecked('Parent 2');
     $assert->elementsCount('css', '.views-row', 1);
     $this->responseContentHasOrder([
       'Parent 1', 'Child 1',
@@ -224,10 +231,12 @@ class SortingFacetIntegrationTest extends FacetsTestBase {
     $this->drupalGet($this->facetEditPage);
     $this->submitForm($edit, 'Save');
     $this->drupalGet('search-api-test-fulltext');
-    $form->checkField($this->parents['Parent 1']->id());
-    $form->uncheckField($this->parents['Parent 2']->id());
+    $form->checkField('Parent 1');
+    $form->uncheckField('Parent 2');
     $form->pressButton('Search');
-    $assert->addressEquals('search-api-test-fulltext?f[0]=hierarchical_facet:2&f[1]=hierarchical_facet:1');
+    $this->assertCurrentUrl('search-api-test-fulltext', [
+      'f' => ['hierarchical_facet:' . $this->parents['Parent 1']->id()],
+    ]);
     $assert->elementsCount('css', '.views-row', 1);
     $this->responseContentHasOrder([
       'Parent 1', 'Child 1',
@@ -235,7 +244,7 @@ class SortingFacetIntegrationTest extends FacetsTestBase {
       'Child 3', 'Child 4',
     ]);
     $page->clickLink('Clear filters');
-    $assert->addressNotEquals('f[0]=hierarchical_facet');
+    $this->assertCurrentUrl('search-api-test-fulltext');
     $assert->elementsCount('css', '.views-row', 6);
   }
 
@@ -359,7 +368,9 @@ class SortingFacetIntegrationTest extends FacetsTestBase {
     $form = $assert->elementExists('css', 'form#facets-form');
     $form->selectFieldOption('hierarchical_facet[]', 'Parent 2');
     $form->pressButton('Search');
-    $assert->addressEquals('search-api-test-fulltext?f[0]=hierarchical_facet:' . $this->parents['Parent 2']->id());
+    $this->assertCurrentUrl('search-api-test-fulltext', [
+      'f' => ['hierarchical_facet:' . $this->parents['Parent 2']->id()],
+    ]);
     $assert->elementsCount('css', '.views-row', 1);
     $this->responseContentHasOrder([
       'Parent 1', '- Child 1',
@@ -384,7 +395,9 @@ class SortingFacetIntegrationTest extends FacetsTestBase {
     $this->drupalGet('search-api-test-fulltext');
     $form->selectFieldOption('hierarchical_facet[]', 'Parent 1');
     $form->pressButton('Search');
-    $assert->addressEquals('search-api-test-fulltext?f[0]=hierarchical_facet:2&f[1]=hierarchical_facet:1');
+    $this->assertCurrentUrl('search-api-test-fulltext', [
+      'f' => ['hierarchical_facet:' . $this->parents['Parent 1']->id()],
+    ]);
     $assert->elementsCount('css', '.views-row', 1);
     $this->responseContentHasOrder([
       'Parent 1', '- Child 1',

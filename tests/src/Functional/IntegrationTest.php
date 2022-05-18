@@ -8,6 +8,7 @@ use Drupal\facets\Entity\Facet;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\facets\Functional\BlockTestTrait;
 use Drupal\Tests\facets\Functional\ExampleContentTrait;
+use Drupal\Tests\facets_form\Traits\FacetUrlTestTrait;
 
 /**
  * Test the facets form.
@@ -18,6 +19,7 @@ class IntegrationTest extends BrowserTestBase {
 
   use ExampleContentTrait;
   use BlockTestTrait;
+  use FacetUrlTestTrait;
 
   /**
    * {@inheritdoc}
@@ -81,12 +83,14 @@ class IntegrationTest extends BrowserTestBase {
     // The form submits and filters the results.
     $page->selectFieldOption('llama[]', 'article');
     $assert->buttonExists('Apply', $form)->press();
-    $this->assertCurrentUrl('search-api-test-fulltext?f[0]=llama:article');
+    $this->assertCurrentUrl('search-api-test-fulltext', ['f' => ['llama:article']]);
     $assert->elementsCount('css', '.views-row', 2);
+
     $page->selectFieldOption('llama[]', 'item');
     $assert->buttonExists('Apply', $form)->press();
-    $this->assertCurrentUrl('search-api-test-fulltext?f[0]=llama:item');
+    $this->assertCurrentUrl('search-api-test-fulltext', ['f' => ['llama:item']]);
     $assert->elementsCount('css', '.views-row', 3);
+
     $page->clickLink('Reset');
     $this->assertCurrentUrl('search-api-test-fulltext');
     $assert->elementsCount('css', '.views-row', 5);
@@ -104,23 +108,37 @@ class IntegrationTest extends BrowserTestBase {
     // Check form submit without any filter.
     $form->pressButton('Apply');
     // Check query string preservation when submitting with no filter changes.
-    $this->assertCurrentUrl('search-api-test-fulltext?foo=bar&baz[]=qux&baz[]=quux');
+    $this->assertCurrentUrl('search-api-test-fulltext', [
+      'foo' => 'bar',
+      'baz' => ['qux', 'quux'],
+    ]);
     $form->checkField('item');
     $form->pressButton('Apply');
     // Check query string preservation after submitting with filter changes.
-    $this->assertCurrentUrl('search-api-test-fulltext?baz[]=qux&baz[]=quux&f[0]=llama:item&foo=bar');
+    $this->assertCurrentUrl('search-api-test-fulltext', [
+      'foo' => 'bar',
+      'baz' => ['qux', 'quux'],
+      'f' => ['llama:item'],
+    ]);
     $assert->checkboxChecked('item', $form);
     $assert->elementsCount('css', '.views-row', 3);
     $form->checkField('article');
     $form->pressButton('Apply');
     // Check query string preservation after submitting with filter changes.
-    $this->assertCurrentUrl('search-api-test-fulltext?foo=bar&baz[]=qux&baz[]=quux&f[0]=llama:article&f[1]=llama:item');
+    $this->assertCurrentUrl('search-api-test-fulltext', [
+      'foo' => 'bar',
+      'baz' => ['qux', 'quux'],
+      'f' => ['llama:article', 'llama:item'],
+    ]);
     $assert->checkboxChecked('item', $form);
     $assert->checkboxChecked('article', $form);
     $assert->elementsCount('css', '.views-row', 5);
     // Check query string preservation after resetting the filters.
     $page->clickLink('Reset');
-    $this->assertCurrentUrl('search-api-test-fulltext?baz[]=qux&baz[]=quux&foo=bar');
+    $this->assertCurrentUrl('search-api-test-fulltext', [
+      'foo' => 'bar',
+      'baz' => ['qux', 'quux'],
+    ]);
 
     // Change configured facets.
     $this->createFacet('Alpaca', 'alpaca');
@@ -139,42 +157,6 @@ class IntegrationTest extends BrowserTestBase {
     $assert->elementExists('css', 'select#edit-alpaca--2', $form);
     $assert->elementNotExists('css', 'select#edit-llama--2', $form);
     $assert->elementNotExists('css', 'select#edit-emu--2', $form);
-  }
-
-  /**
-   * Asserts that the current URL matches the expected one, including the query.
-   *
-   * Note that \Behat\Mink\WebAssert::addressEquals() strips out the query
-   * string, comparing only the path and the fragment. But, in the scope of this
-   * test, we need to also compare the query strings.
-   *
-   * @param \Drupal\Core\Url|string $expected_url
-   *   The expected URL.
-   *
-   * @see \Behat\Mink\WebAssert::addressEquals()
-   */
-  protected function assertCurrentUrl(string $expected_url): void {
-    // Check first the path & the fragment.
-    $this->assertSession()->addressEquals($expected_url);
-    // Compare also the query strings as arrays but allow different order.
-    $expected_query = $this->normalizeQueryString($expected_url);
-    $actual_query = $this->normalizeQueryString($this->getSession()->getCurrentUrl());
-    $this->assertEquals($expected_query, $actual_query);
-  }
-
-  /**
-   * Normalizes a given URL query string to an array.
-   *
-   * @param string $url
-   *   The URL.
-   *
-   * @return array
-   *   The array representation of the query string.
-   */
-  protected function normalizeQueryString(string $url): array {
-    $query_string = (string) parse_url($url, PHP_URL_QUERY);
-    parse_str($query_string, $query_array);
-    return $query_array;
   }
 
 }

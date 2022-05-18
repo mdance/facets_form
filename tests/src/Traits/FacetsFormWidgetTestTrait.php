@@ -29,8 +29,8 @@ trait FacetsFormWidgetTestTrait {
   protected function getResults(FacetInterface $facet, array $data, array $active = []): array {
     $results = [];
     foreach ($data as $value => $children) {
-      $display_value = str_replace(['1', '2', '3'], ['One', 'Two', 'Three'], $value);
-      $count = (int) str_replace('.', '', $value);
+      $display_value = str_replace(['1', '2', '3'], ['One', 'Two', 'Three'], (string) $value);
+      $count = (int) str_replace('.', '', (string) $value);
       $result = new Result($facet, $value, $display_value, $count);
       $result->setUrl(Url::fromUri("http://example.com/{$value}"));
       if (in_array($value, $active)) {

@@ -8,6 +8,7 @@ use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\search_api\Entity\Index;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\facets\Functional\BlockTestTrait;
+use Drupal\Tests\facets_form\Traits\FacetUrlTestTrait;
 use Drupal\Tests\node\Traits\ContentTypeCreationTrait;
 use Drupal\Tests\node\Traits\NodeCreationTrait;
 
@@ -20,6 +21,7 @@ class DateRangeIntegrationTest extends BrowserTestBase {
 
   use BlockTestTrait;
   use ContentTypeCreationTrait;
+  use FacetUrlTestTrait;
   use NodeCreationTrait;
 
   /**
@@ -81,7 +83,7 @@ class DateRangeIntegrationTest extends BrowserTestBase {
     // Test greater or equals operator.
     $page->fillField('edit-authored-on-from-date', '2021-08-16');
     $form->pressButton('Search');
-    $assert->addressEquals('test?f[0]=authored_on%3A2021-08-16~');
+    $this->assertCurrentUrl('test', ['f' => ['authored_on:2021-08-16~']]);
     $assert->elementsCount('css', '.views-row', 1);
     $assert->pageTextNotContains('Llama');
     $assert->pageTextContains('Emu');
@@ -89,7 +91,7 @@ class DateRangeIntegrationTest extends BrowserTestBase {
     $page->fillField('edit-authored-on-from-date', '');
     $page->fillField('edit-authored-on-to-date', '2021-08-16');
     $form->pressButton('Search');
-    $assert->addressEquals('test?f[0]=authored_on%3A~2021-08-16');
+    $this->assertCurrentUrl('test', ['f' => ['authored_on:~2021-08-16']]);
     $assert->elementsCount('css', '.views-row', 1);
     $assert->pageTextContains('Llama');
     $assert->pageTextNotContains('Emu');
@@ -97,7 +99,7 @@ class DateRangeIntegrationTest extends BrowserTestBase {
     $page->fillField('edit-authored-on-from-date', '2021-08-16');
     $page->fillField('edit-authored-on-to-date', '2021-08-17');
     $form->pressButton('Search');
-    $assert->addressEquals('test?f[0]=authored_on%3A2021-08-16~2021-08-17');
+    $this->assertCurrentUrl('test', ['f' => ['authored_on:2021-08-16~2021-08-17']]);
     $assert->elementsCount('css', '.views-row', 1);
     $assert->pageTextNotContains('Llama');
     $assert->pageTextContains('Emu');
