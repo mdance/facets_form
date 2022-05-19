@@ -19,11 +19,13 @@ This has some drawbacks:
 
 ## Dependency
 
-This module depends on [Facets](https://www.drupal.org/project/facets) and
-requires [this patch](https://www.drupal.org/project/facets/issues/3223956). If
-you use Composer, the patch will be automatically downloaded for you, otherwise
-you'll need to apply the patch manually. Please, support the patch adoption in
-https://www.drupal.org/project/facets/issues/3223956.
+This module depends on [Facets 2.x](https://www.drupal.org/project/facets)
+
+## Upgrading from "1.0.0-alpha2"
+
+In case you applied [patch](https://www.drupal.org/project/facets/issues/3223956)
+manually, you will need to remove it. In case you used composer this will happen
+when upgrading the version.
 
 ## Usage
 
