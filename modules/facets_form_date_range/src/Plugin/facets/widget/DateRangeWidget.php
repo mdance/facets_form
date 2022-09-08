@@ -177,9 +177,11 @@ class DateRangeWidget extends ArrayWidget implements FacetsFormWidgetInterface, 
     $configuration = $facet->getWidgetInstance()->getConfiguration();
     $date_time_element = $configuration['date_type'] === DateRange::TYPE_DATE ? 'none' : 'time';
 
-    // Set fake results so that the build will not consider the empty behaviour.
-    // @see \Drupal\facets\FacetManager\DefaultFacetManager::build()
-    $facet->setResults([new Result($facet, NULL, NULL, 0)]);
+    if (!$facet->getResults()) {
+      // Set fake results so that the build will avoid the empty behaviour.
+      // @see \Drupal\facets\FacetManager\DefaultFacetManager::build()
+      $facet->setResults([new Result($facet, NULL, NULL, 0)]);
+    }
 
     return [
       $facet->id() => [
