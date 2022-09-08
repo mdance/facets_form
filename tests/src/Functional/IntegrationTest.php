@@ -64,13 +64,13 @@ class IntegrationTest extends BrowserTestBase {
     // Place the Facets Form block for a view page source.
     $block = $this->drupalPlaceBlock('facets_form:search_api:views_page__search_api_test_view__page_1');
     $this->drupalGet('admin/structure/block/manage/' . $block->id());
+    $config_form = $assert->elementExists('css', '.block-form');
     $assert->fieldValueEquals('Submit button', 'Search');
     $assert->fieldValueEquals('Reset button', 'Clear filters');
-    $page->fillField('Submit button', 'Apply');
-    $page->fillField('Reset button', 'Reset');
-    $assert->fieldExists('Llama');
-    $page->checkField('Llama');
-    $page->pressButton('Save block');
+    $config_form->fillField('Submit button', 'Apply');
+    $config_form->fillField('Reset button', 'Reset');
+    $config_form->checkField('Llama');
+    $config_form->pressButton('Save block');
     $this->drupalGet('search-api-test-fulltext');
     $assert->elementsCount('css', '.views-row', 5);
     $form = $assert->elementExists('css', 'form#facets-form');
