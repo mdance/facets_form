@@ -38,10 +38,10 @@ block.settings.facets_form:*:*:
           label: Label
           mapping:
             submit:
-              type: string
+              type: label
               label: Submit
             reset:
-              type: string
+              type: label
               label: Clear filters
     facets:
       type: sequence

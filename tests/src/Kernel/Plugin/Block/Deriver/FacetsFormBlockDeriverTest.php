@@ -61,7 +61,7 @@ class FacetsFormBlockDeriverTest extends EntityKernelTestBase {
     $facet_sources = $this->container
       ->get('plugin.manager.facets.facet_source')
       ->getDefinitions();
-    $this->assertCount(9, $facet_sources);
+    $this->assertCount(10, $facet_sources);
 
     /** @var \Drupal\Core\Block\BlockManagerInterface $block_manager */
     $block_manager = $this->container->get('plugin.manager.block');
