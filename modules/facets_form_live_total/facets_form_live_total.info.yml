@@ -3,6 +3,8 @@ description: Provides live results count for the facets summary.
 package: Search
 type: module
 core_version_requirement: ^8.9 || ^9.1
+lifecycle: deprecated
+lifecycle_link: https://www.drupal.org/project/facets_form/releases/1.0.0-alpha4
 dependencies:
   - facets_form:facets_form
   - facets:facets_summary
