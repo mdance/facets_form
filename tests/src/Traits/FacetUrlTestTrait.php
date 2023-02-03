@@ -67,6 +67,18 @@ trait FacetUrlTestTrait {
       // Use array query to get a multi-line diff.
       $parts['query'] = $query;
     }
+    // Clean internal paths.
+    if (isset($parts['path'])) {
+      $parts['path'] = str_replace(
+        [
+          $this->baseUrl . '/',
+          base_path(),
+        ],
+        '',
+        $parts['path'],
+      );
+    }
+
     // Use yaml to make the diff more readable.
     return Yaml::dump($parts, 10, 2);
   }

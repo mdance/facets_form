@@ -157,6 +157,36 @@ class IntegrationTest extends BrowserTestBase {
     $assert->elementExists('css', 'select#edit-alpaca--2', $form);
     $assert->elementNotExists('css', 'select#edit-llama--2', $form);
     $assert->elementNotExists('css', 'select#edit-emu--2', $form);
+
+    // Drupal caches forms, so we make sure the reset link has the correct url
+    // parameters.
+    $this->drupalLogout();
+    // Visit the page as Anonymous with query parameters.
+    $this->drupalGet('search-api-test-fulltext', [
+      'query' => [
+        'foo' => 'bar',
+        'baz' => ['qux', 'quux'],
+      ],
+    ]);
+    $this->assertCurrentUrl('search-api-test-fulltext', [
+      'foo' => 'bar',
+      'baz' => ['qux', 'quux'],
+    ]);
+    // Change the query parameters and assert the reset link also changed.
+    $this->drupalGet('search-api-test-fulltext', [
+      'query' => [
+        'mip' => 'map',
+      ],
+    ]);
+    $this->assertCurrentUrl('search-api-test-fulltext', [
+      'mip' => 'map',
+    ]);
+    $this->assertSame(
+      $this->formatUrlForDiff('search-api-test-fulltext', [
+        'mip' => 'map',
+      ]),
+      $this->formatUrlForDiff($page->findLink('Reset')->getAttribute('href')),
+    );
   }
 
 }

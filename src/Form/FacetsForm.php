@@ -158,7 +158,10 @@ class FacetsForm extends FormBase {
     // Mark this form as facets form.
     $form['#attributes']['data-drupal-facets-form'] = $source_id;
 
+    // Add the cache contexts.
+    $cache->setCacheContexts(['url.query_args']);
     $cache->applyTo($form);
+
 
     return $form;
   }
