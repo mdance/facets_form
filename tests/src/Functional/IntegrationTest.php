@@ -189,4 +189,67 @@ class IntegrationTest extends BrowserTestBase {
     );
   }
 
+  /**
+   * Test facets form as dependent facet.
+   */
+  public function testFacetsFormWithDependencies(): void {
+    $assert = $this->assertSession();
+    $page = $this->getSession()->getPage();
+
+    $facet_name = 'Emu';
+    $facet_id = 'emu';
+    $this->createFacet($facet_name, $facet_id);
+    $facet = Facet::load($facet_id);
+    $facet->setWidget('facets_form_dropdown');
+    $facet->save();
+
+    $depending_name = 'Llama';
+    $depending_id = 'llama';
+    $this->createFacet($depending_name, $depending_id, 'category');
+    $depending_facet = Facet::load($depending_id);
+    $processor = [
+      'processor_id' => 'dependent_processor',
+      'weights' => ['build' => 5],
+      'settings' => [
+        $facet_id => [
+          'enable' => TRUE,
+          'condition' => 'values',
+          'values' => 'item',
+          'negate' => FALSE,
+        ],
+      ],
+    ];
+    $depending_facet->addProcessor($processor);
+    $depending_facet->setWidget('facets_form_dropdown');
+    $depending_facet->save();
+
+    // Place the Facets Form block.
+    $settings['button']['label']['submit'] = 'Refine';
+    $this->drupalPlaceBlock('facets_form:search_api:views_page__search_api_test_view__page_1', $settings);
+    $this->drupalGet('search-api-test-fulltext');
+
+    $assert->elementsCount('css', '.views-row', 5);
+    $form = $assert->elementExists('css', 'form#facets-form');
+
+    // Test that the dependent facet is not shown.
+    $assert->elementExists('css', 'select#edit-emu--2', $form);
+    $assert->elementNotExists('css', 'select#edit-llama--2', $form);
+
+    // Test that dependent facet exists when correct value is set.
+    $page->selectFieldOption('emu[]', 'item');
+    $assert->buttonExists('Refine', $form)->press();
+    $this->assertCurrentUrl('search-api-test-fulltext', ['f' => ['emu:item']]);
+    $assert->elementsCount('css', '.views-row', 3);
+    $assert->elementExists('css', 'select#edit-emu--2', $form);
+    $assert->elementExists('css', 'select#edit-llama--2', $form);
+
+    // Test that dependent facet doesn't exist when other value is set.
+    $page->selectFieldOption('emu[]', 'article');
+    $assert->buttonExists('Refine', $form)->press();
+    $this->assertCurrentUrl('search-api-test-fulltext', ['f' => ['emu:article']]);
+    $assert->elementsCount('css', '.views-row', 2);
+    $assert->elementExists('css', 'select#edit-emu--2', $form);
+    $assert->elementNotExists('css', 'select#edit-llama--2', $form);
+  }
+
 }

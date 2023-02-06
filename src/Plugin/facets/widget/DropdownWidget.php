@@ -100,7 +100,7 @@ class DropdownWidget extends ArrayWidget implements FacetsFormWidgetInterface, C
       ],
       'disabled_on_empty' => [
         '#type' => 'checkbox',
-        '#title' => $this->t('Disable when there are no results'),
+        '#title' => $this->t('Disable when there are no results. Enabling this will return the widget along with whatever is set in the "Empty facet behavior".'),
         '#default_value' => $this->getConfiguration()['disabled_on_empty'],
       ],
     ] + parent::buildConfigurationForm($form, $form_state, $facet);
@@ -111,8 +111,14 @@ class DropdownWidget extends ArrayWidget implements FacetsFormWidgetInterface, C
    */
   public function build(FacetInterface $facet) {
     $items = parent::build($facet)[$facet->getFieldIdentifier()] ?? [];
-
     $this->processItems($items, $facet);
+
+    // Honour the "Empty facet behavior", the widget's build still gets printed
+    // in the page even if the empty behaviour kicks in, so we need to empty the
+    // build if there are no results.
+    if (empty($items) && !$this->getConfiguration()['disabled_on_empty']) {
+      return [];
+    }
 
     $options = $ancestors = [];
     if ($facet->getShowOnlyOneResult()) {

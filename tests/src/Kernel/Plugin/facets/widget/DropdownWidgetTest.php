@@ -26,6 +26,32 @@ class DropdownWidgetTest extends KernelTestBase {
   ];
 
   /**
+   * Test the widget with empty items and different config.
+   */
+  public function testWithEmptyItems(): void {
+    // Empty results should return an empty build.
+    $facet = new Facet(['id' => 'foo'], 'facets_facet');
+    $facet->setFacetSourceId('facets_form_test');
+    $facet->setWidget('facets_form_dropdown');
+    $facet->setResults($this->getResults($facet, []));
+    $build = $facet->getWidgetInstance()->build($facet);
+
+    $this->assertEmpty($build);
+
+    // Exception the disabled_on_empty behaviour, we still want the build but
+    // disabled, to indicate to the user that there are no results.
+    $facet->setWidget('facets_form_dropdown', ['disabled_on_empty' => TRUE]);
+    $build = $facet->getWidgetInstance()->build($facet)['foo'];
+
+    $this->assertSame('select', $build['#type']);
+    $this->assertSame('invisible', $build['#title_display']);
+    $this->assertEmpty($build['#default_value']);
+    $this->assertTrue($build['#multiple']);
+    $this->assertTrue($build['#disabled']);
+    $this->assertEmpty($build['#options']);
+  }
+
+  /**
    * Test the Facets Form dropdown widget build.
    *
    * @param array $facet_values
@@ -186,19 +212,6 @@ class DropdownWidgetTest extends KernelTestBase {
           '1.1' => '&nbsp; One.One',
           '1.1.1' => '&nbsp;&nbsp; One.One.One',
         ],
-      ],
-      'empty_items' => [
-        [],
-        [
-          'disabled_on_empty' => TRUE,
-        ],
-        [],
-        [],
-        'invisible',
-        [],
-        TRUE,
-        TRUE,
-        [],
       ],
       'with_show_number' => [
         [],
