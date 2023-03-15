@@ -11,6 +11,14 @@ name: test
 description: ''
 read_only: false
 field_settings:
+    type:
+        label: Type
+        datasource_id: 'entity:node'
+        property_path: type
+        type: string
+        dependencies:
+          module:
+            - node
     created:
         label: 'Authored on'
         datasource_id: 'entity:node'

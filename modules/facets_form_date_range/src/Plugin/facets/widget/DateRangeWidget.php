@@ -173,6 +173,10 @@ class DateRangeWidget extends ArrayWidget implements FacetsFormWidgetInterface, 
    * {@inheritdoc}
    */
   public function build(FacetInterface $facet) {
+    if (!$this->checkDependentProcessors($facet)) {
+      return [];
+    }
+
     $date_range = DateRange::createFromFacet($facet);
     $configuration = $facet->getWidgetInstance()->getConfiguration();
     $date_time_element = $configuration['date_type'] === DateRange::TYPE_DATE ? 'none' : 'time';
@@ -241,6 +245,47 @@ class DateRangeWidget extends ArrayWidget implements FacetsFormWidgetInterface, 
    * {@inheritdoc}
    */
   protected function getOptionLabel(array $item, int $depth, FacetInterface $facet) {
+  }
+
+  /**
+   * Helper function to see if a Facet should be enabled based on its dependencies.
+   *
+   * @param \Drupal\facets\FacetInterface $facet
+   *   The facet we should build.
+   *
+   * @return bool
+   *   True if Facet should be enabled.
+   */
+  protected function checkDependentProcessors(FacetInterface $facet): bool {
+    $processors = $facet->getProcessors();
+
+    // In case dependent processor is not enabled, facet should be enabled by default.
+    if (!isset($processors['dependent_processor'])) {
+      return TRUE;
+    }
+
+    $facet_manager = \Drupal::service('facets.manager');
+    $facets = $facet_manager->getFacetsByFacetSourceId($facet->getFacetSourceId());
+    $conditions = $processors['dependent_processor']->getConfiguration();
+
+    // Load enabled conditions to be checked.
+    $enabled_conditions = [];
+    foreach ($conditions as $facet_id => $condition) {
+      if (empty($condition['enable'])) {
+        continue;
+      }
+      $enabled_conditions[$facet_id] = $condition;
+    }
+
+    // Process conditions to see if facet should be enabled.
+    foreach ($enabled_conditions as $facet_id => $condition_settings) {
+      // If any condition is not met, facet will be disabled.
+      if (!isset($facets[$facet_id]) || !$processors['dependent_processor']->isConditionMet($condition_settings, $facets[$facet_id])) {
+        return FALSE;
+      }
+    }
+
+    return TRUE;
   }
 
 }
