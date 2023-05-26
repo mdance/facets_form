@@ -6,4 +6,5 @@ update_total:
   dependencies:
     - core/drupal
     - core/drupal.ajax
+    - core/once
     - facets_form/plugin_base

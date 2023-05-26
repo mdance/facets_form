@@ -105,7 +105,7 @@ class FacetsForm extends FormBase {
 
     // Ask 3rd-party if they want to enable Javascript capability.
     $event = new TriggerWidgetChangeJavaScriptEvent($source_id, $config);
-    $this->eventDispatcher->dispatch(TriggerWidgetChangeJavaScriptEvent::class, $event);
+    $this->eventDispatcher->dispatch($event);
     if ($trigger_widget_change_event = $event->shouldTriggerWidgetChangeEvent()) {
       $libraries = $this->libraryDiscovery->getLibrariesByExtension('facets_form');
     }

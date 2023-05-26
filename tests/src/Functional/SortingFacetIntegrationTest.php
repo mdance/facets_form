@@ -26,9 +26,24 @@ class SortingFacetIntegrationTest extends FacetsTestBase {
   use TaxonomyTestTrait;
 
   /**
+   * A taxonomy vocabulary.
+   *
+   * @var \Drupal\taxonomy\VocabularyInterface
+   */
+  protected $vocabulary;
+
+
+  /**
+   * The field name.
+   *
+   * @var string
+   */
+  protected $fieldName;
+
+  /**
    * {@inheritdoc}
    */
-  public static $modules = [
+  protected static $modules = [
     'block',
     'facets_form',
     'facets_search_api_dependency',

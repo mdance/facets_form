@@ -6,4 +6,3 @@ hidden: true
 dependencies:
     - search_api:search_api_db
     - drupal:views
-core_version_requirement: ^8.9 || ^9.1

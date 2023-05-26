@@ -3,7 +3,7 @@
  * Allows dispatching of 'facets_form' custom event.
  */
 
-(function ($, Drupal) {
+(function (Drupal, once) {
 
   'use strict';
 
@@ -25,10 +25,13 @@
     attach(document) {
       // Switch to vanilla Javascript when support for Drupal 9.1 is dropped.
       // See https://www.drupal.org/node/3158256.
-      $(document).find('form[data-drupal-facets-form]').once('facets_form').each((index, form) => {
+      const forms = once('facets_form', 'form[data-drupal-facets-form]', document);
+      forms.forEach(function (form) {
         form.filters = new Drupal.facetsFormFilters();
       });
-      $(document).find('[data-drupal-facets-form-widget]').once('facets_form_widgets').each((index, widget) => {
+
+      const widgets = once('facets_form_widgets', '[data-drupal-facets-form-widget]', document);
+      widgets.forEach(function (widget) {
         const camelCasePluginId = widget.dataset.drupalFacetsFormWidget.replace(/([-_]\w)/g, g => g[1].toUpperCase());
         const pluginNamespace = Drupal[camelCasePluginId];
         // Initialize the filters on page load but don't dispatch the event.
@@ -112,4 +115,4 @@
     }
   };
 
-})(jQuery, Drupal);
+})(Drupal, once);

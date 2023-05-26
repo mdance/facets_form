@@ -4,7 +4,7 @@ declare(strict_types = 1);
 
 namespace Drupal\facets_form\Event;
 
-use Symfony\Component\EventDispatcher\Event;
+use Symfony\Contracts\EventDispatcher\Event;
 
 /**
  * Subscribe to this event to enable triggering the widget change JS event.

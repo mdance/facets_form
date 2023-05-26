@@ -3,7 +3,7 @@
  * Updates the Facets Summary total.
  */
 
-(function ($, Drupal) {
+(function (Drupal, once) {
 
   'use strict';
 
@@ -19,7 +19,8 @@
     attach(document) {
       // Switch to vanilla Javascript when support for Drupal 9.1 is dropped.
       // See https://www.drupal.org/node/3158256.
-      $(document).find('form[data-drupal-facets-form-live-total]').once('facets_form_live_total').each((index, form) => {
+      const forms = once('facets_form_live_total', 'form[data-drupal-facets-form-live-total]', document);
+      forms.forEach(function (form) {
         form.addEventListener('facets_form', event => {
           if (Drupal.facetsFormLiveTotal.updateIsNeeded(event.detail.widget, event.detail.diff)) {
             Drupal.ajax({
@@ -108,4 +109,4 @@
     }
   };
 
-})(jQuery, Drupal);
+})(Drupal, once);

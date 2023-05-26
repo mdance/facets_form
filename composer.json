@@ -22,6 +22,6 @@
         "drupal/facets": "^2.0"
     },
     "require-dev": {
-        "drupal/search_api": "^1.13"
+        "drupal/search_api": "^1.28"
     }
 }
