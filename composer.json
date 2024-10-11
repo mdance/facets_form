@@ -19,7 +19,7 @@
         }
     ],
     "require": {
-        "drupal/facets": "^2.0"
+        "drupal/facets" : "^3.0@beta"
     },
     "require-dev": {
         "drupal/search_api": "^1.28"
